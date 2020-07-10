@@ -1,0 +1,1 @@
+"""This package contains all the watermark algorithms in this project"""
