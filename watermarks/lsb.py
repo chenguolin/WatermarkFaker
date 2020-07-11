@@ -23,6 +23,6 @@ class LSB:
         info_ = int(lsb + '0'*6, 2)
         return info_
 
-    def extract(self, image_wm):
+    def extract(self, image_wm, image=None):
         watermark_ = np.vectorize(self.__pixel_extract)(image_wm)
         return watermark_
