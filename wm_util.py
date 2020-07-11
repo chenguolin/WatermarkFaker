@@ -4,12 +4,12 @@ This module contains some helper functions related to watermarks.
 import os
 import cv2
 import argparse
-from watermarks import lsb, dft
 from utils import util
+from watermarks import lsb, dft, dct
 
 
 def embed_dataset(algorithm, source_path, watermark_path, output_path, RGB=True):
-    """Embed original dataset by a watermark algorithm
+    """Embed original dataset by a watermark algorithm.
 
     Parameters:
         algorithm (class)    -- a watermark algorithm
@@ -34,7 +34,7 @@ def test_watermark(algorithm):
     """Apply the `lena.png` as watermark algorithm to `test.png`.
     
     Parameter:
-        algorithm (class) -- a watermark algorithm
+        algorithm (class)            -- a watermark algorithm
     """
     alg = algorithm()
 
@@ -50,7 +50,19 @@ def test_watermark(algorithm):
 
     elif isinstance(alg, dft.DFT):
         image = cv2.imread("./images/test.png", flags=0)  # grayscale
-        watermark = cv2.resize(cv2.imread("./images/lena.png", flags=0), (128, 128), interpolation=cv2.INTER_CUBIC)
+        h1, w1 = image.shape
+        watermark = cv2.resize(cv2.imread("./images/lena.png", flags=0), (int(h1/2), int(w1/2)), interpolation=cv2.INTER_CUBIC)
+
+        image_wm = alg.embed(image, watermark)
+        cv2.imwrite("./images/test_.png", image_wm)
+
+        watermark_ = alg.extract(image_wm, image)
+        cv2.imwrite("./images/lena_.png", watermark_)
+
+    elif isinstance(alg, dct.DCT):
+        image = cv2.imread("./images/test.png", flags=0)
+        h1, w1 = image.shape
+        watermark = cv2.resize(cv2.imread("./images/lena.png", flags=0), (256, 256), interpolation=cv2.INTER_CUBIC)
 
         image_wm = alg.embed(image, watermark)
         cv2.imwrite("./images/test_.png", image_wm)
@@ -59,7 +71,7 @@ def test_watermark(algorithm):
         cv2.imwrite("./images/lena_.png", watermark_)
 
     else:
-        raise NotImplementedError("Please use watermark classes [LSB | DFT]")
+        raise NotImplementedError("Please use watermark classes [LSB | DFT | DWT]")
 
 
 def combine(left, right, output, RGB=True):
@@ -80,4 +92,4 @@ def combine(left, right, output, RGB=True):
 
 
 if __name__ == '__main__':
-    test_watermark(dft.DFT)
+    test_watermark(dct.DCT)
