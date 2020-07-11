@@ -1,11 +1,11 @@
-
 import numpy as np
+from watermarks.base_watermark import BaseWatermark
 
 
 class DFT:
     def __init__(self, alpha=5):
+        super(BaseWatermark).__init__()
         self.alpha = alpha
-        super().__init__()
 
     def embed(self, image, watermark, save_watermark=False):
         if len(image.shape) != 2:

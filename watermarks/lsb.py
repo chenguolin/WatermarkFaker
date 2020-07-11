@@ -1,9 +1,10 @@
 import numpy as np
+from watermarks.base_watermark import BaseWatermark
 
 
-class LSB:
+class LSB(BaseWatermark):
     def __init__(self):
-        super().__init__()
+        super(BaseWatermark).__init__()
 
     def __pixel_embed(self, origin, info):
         origin = format(origin, '08b')
