@@ -3,11 +3,12 @@ from watermarks.base_watermark import BaseWatermark
 
 
 class DFT:
-    def __init__(self, alpha=5):
+    def __init__(self, alpha=5, save_watermark=False):
         super(BaseWatermark).__init__()
         self.alpha = alpha
+        self.save_watermark = save_watermark
 
-    def embed(self, image, watermark, save_watermark=False):
+    def embed(self, image, watermark):
         if len(image.shape) != 2:
             raise TypeError("Image to embed DFT should be grayscale")
         if watermark.shape[0] != image.shape[0] / 2 and watermark.shape[1] != image.shape[1] / 2:
@@ -21,7 +22,7 @@ class DFT:
             for j in range(watermark.shape[1]):
                 broad_watermark[i][j] = watermark[i][j]
                 broad_watermark[image.shape[0] - i - 1][image.shape[1] - j - 1] = broad_watermark[i][j]
-        if save_watermark:
+        if self.save_watermark:
             import cv2
             cv2.imwrite('./images/dft_watermark.png', broad_watermark)
         
