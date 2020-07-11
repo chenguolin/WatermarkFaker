@@ -5,6 +5,7 @@
 ## 0x00 将当前路径设置为本文件夹并安装（更新）相应的库
 打开一个终端，输入：
 ```
+git clone https://github.com/SleepSupreme/GAN-for-Digital-Watermarks
 cd <你存放本文件夹>/GAN-for-LSB-Watermarks
 pip install -r requirements.txt
 ```
@@ -24,7 +25,7 @@ bash ./scripts/train_pix2pix.sh
 ```
 - Windows
 ```
-python train.py --dataroot ./datasets/lsb --name lsb_pix2pix --model pix2pix --netG unet_256 -netD basic --max_dataset_size 12000 -norm batch --n_epochs 5 --n_epochs_decay 5 -gan_mode lsgan --pool_size 0
+python train.py --dataroot ../datasets/lsb --name lsb_pix2pix --model pix2pix --netG unet_256 --netD basic --max_dataset_size 12000 --norm batch --n_epochs 5 --n_epochs_decay 5 --gan_mode vanilla --pool_size 0
 ```
 
 ## 0x03 测试网络：
@@ -34,5 +35,5 @@ bash ./scripts/test_pix2pix.sh
 ```
 - Windows
 ```
-python test.py --dataroot ./datasets/lsb --name lsb_pix2pix --model pix2pix --netG unet_256
+python test.py --dataroot ../datasets/lsb --name lsb_pix2pix --model pix2pix --netG unet_256
 ```
