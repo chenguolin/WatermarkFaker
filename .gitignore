@@ -1,0 +1,11 @@
+*/*.pyc
+*/**/*.pyc
+*/**/**/*.pyc
+*/**/**/**/*.pyc
+*/**/**/**/**/*.pyc
+*/**/__pycache__
+datasets/
+checkpoints/
+*.png
+.idea
+.vscode
