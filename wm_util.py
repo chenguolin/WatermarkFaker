@@ -4,6 +4,7 @@ This module contains some helper functions related to watermarks.
 import os
 import cv2
 import argparse
+import numpy as np
 from utils import util
 from watermarks import lsb, dft, dct
 
