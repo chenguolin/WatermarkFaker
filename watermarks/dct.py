@@ -5,10 +5,9 @@ from watermarks.base_watermark import BaseWatermark
 
 class DCT(BaseWatermark):
     def __init__(self, alpha=0.03, block_size=1, save_watermark=False):
-        BaseWatermark.__init__(self)
+        BaseWatermark.__init__(self, save_watermark)
         self.alpha = alpha
         self.block_size = block_size
-        self.save_watermark = save_watermark
 
     def embed(self, image, watermark):
         h1, w1 = image.shape

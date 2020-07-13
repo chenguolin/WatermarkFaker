@@ -10,8 +10,9 @@ class BaseWatermark(ABC):
         -- <extract>:  extract `watermark_` from `image_wm`; some algorithms require the original image
     """
 
-    def __init__(self):
+    def __init__(self, save_watermark):
         """Initialize some parameters used in this watermark algorithm."""
+        self.save_watermark = save_watermark
         pass
 
     @abstractmethod

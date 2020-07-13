@@ -4,9 +4,8 @@ from watermarks.base_watermark import BaseWatermark
 
 class DFT(BaseWatermark):
     def __init__(self, alpha=5, save_watermark=False):
-        BaseWatermark.__init__(self)
+        BaseWatermark.__init__(self, save_watermark)
         self.alpha = alpha
-        self.save_watermark = save_watermark
 
     def embed(self, image, watermark):
         if len(image.shape) != 2:
