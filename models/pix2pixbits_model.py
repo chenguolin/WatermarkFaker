@@ -90,7 +90,8 @@ class Pix2PixBitsModel(BaseModel):
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         self.fake_B = self.netG(self.real_A)  # G(A)
-        self.fake_watermark = lsb.LSB().extract(bits2im(self.fake_B))
+        self.fake_B_img = bits2im(self.fake_B)
+        self.fake_watermark = lsb.LSB().extract(self.fake_B_img)
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
