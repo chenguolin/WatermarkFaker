@@ -107,7 +107,7 @@ def get_transform(opt, params=None, grayscale=False, method=Image.BICUBIC, conve
         elif params['flip']:
             transform_list.append(transforms.Lambda(lambda img: __flip(img, params['flip'])))
 
-    if opt.model == 'pix2pix-bits':
+    if opt.model == 'pix2pixbits':
         convert = False
         transform_list.append(transforms.Lambda(lambda img: __transform_to_bits(img)))
 

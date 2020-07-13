@@ -4,7 +4,7 @@ from watermarks import lsb
 from utils.util import tensor2im, bits2im
 from .base_model import BaseModel
 
-class Pix2PixModel(BaseModel):
+class Pix2PixBitsModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
 
     The model training requires '--dataset_mode aligned' dataset.
