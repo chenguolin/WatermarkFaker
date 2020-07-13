@@ -9,3 +9,5 @@ checkpoints/
 *.png
 .idea
 .vscode
+temp.*
+temp/
