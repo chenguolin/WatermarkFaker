@@ -175,5 +175,5 @@ def __transform_to_bits(img):
     for c in range(img.shape[2]):
         for b in range(7, -1, -1):
             bit_layers.append((img[:, :, c] >> b) & 1)  # ith bit layer
-    bits_numpy = np.array(bit_layers).astype('float')   # (24, 256, 256)
+    bits_numpy = np.array(bit_layers).astype('float32')   # (24, 256, 256)
     return torch.from_numpy(bits_numpy * 2 - 1)         # to tensor and normalize
