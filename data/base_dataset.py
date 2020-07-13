@@ -2,6 +2,7 @@
 This module implements an abstract base class (ABC) 'BaseDataset' for datasets.
 It also includes common transformation functions (e.g., get_transform, __scale_width), which can be later used in subclasses.
 """
+import torch
 import random
 import numpy as np
 from PIL import Image
@@ -106,12 +107,17 @@ def get_transform(opt, params=None, grayscale=False, method=Image.BICUBIC, conve
         elif params['flip']:
             transform_list.append(transforms.Lambda(lambda img: __flip(img, params['flip'])))
 
+    if opt.model == 'pix2pix-bits':
+        convert = False
+        transform_list.append(transforms.Lambda(lambda img: __transform_to_bits(img)))
+
     if convert:
         transform_list += [transforms.ToTensor()]
         if grayscale:
             transform_list += [transforms.Normalize((0.5,), (0.5,))]
         else:
             transform_list += [transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+    
     return transforms.Compose(transform_list)
 
 
@@ -160,3 +166,14 @@ def __print_size_warning(ow, oh, w, h):
               "(%d, %d). This adjustment will be done to all images "
               "whose sizes are not multiples of 4" % (ow, oh, w, h))
         __print_size_warning.has_printed = True
+
+
+def __transform_to_bits(img):
+    img = np.array(img)
+    bit_layers = []
+    channel_layers = []
+    for c in range(img.shape[2]):
+        for b in range(7, -1, -1):
+            bit_layers.append((img[:, :, c] >> b) & 1)  # ith bit layer
+    bits_numpy = np.array(bit_layers).astype('float')   # (24, 256, 256)
+    return torch.from_numpy(bits_numpy * 2 - 1)         # to tensor and normalize

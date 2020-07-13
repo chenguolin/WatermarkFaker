@@ -36,13 +36,33 @@ def tensor2im(input_image, imtype=np.uint8):
         if isinstance(input_image, torch.Tensor):  # detach the tensor from current graph
             image_tensor = input_image.detach()
         else:
-            return input_image
+            raise TypeError("Type of the input is neither `np.ndarray` nor `torch.Tensor`")
         image_numpy = image_tensor[0].cpu().float().numpy()
         if image_numpy.shape[0] == 1:  # grayscale to RGB
             image_numpy = np.tile(image_numpy, (3, 1, 1))  # a -> [a,a,a]
         image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.0  # [c, h, w] -> [h,w,c] & [-1,1] -> [0,255]
     else:  # if it is a numoy array, do nothing
         image_numpy = input_image
+    return image_numpy.astype(imtype)
+
+
+def bits2im(input_bits, imtype=np.uint8):
+    """Convert a bits Tensor (8x3 channels) array into a numpy image array.
+    
+    In the begining, images are read by Image; which means color images are read in the order of `R->G->B` (different from cv2)
+    """
+    if not isinstance(input_bits, torch.Tensor):
+        raise TypeError("Type of input bit layers should be torch.Tensor")
+    bits_tensor = input_bits.detach()
+    bits_numpy = bits_tensor[0].cpu().float().numpy()                       # get the first batch
+    if bits_numpy.shape[0] == 8:
+        bits_numpy = np.tile(bits_numpy, (3, 1, 1))
+    bits_numpy = np.round((np.transpose(bits_numpy, (1, 2, 0)) + 1) / 2.0)  # (256, 256, 24)
+    RGB = []
+    pow2 = np.array([128, 64, 32, 16, 8, 4, 2, 1])
+    for i in range(3):
+        RGB.append(np.sum(bits_numpy[:, :, i*8:(i+1)*8] * pow2, axis=2))
+    image_numpy = np.array(RGB).transpose((1, 2, 0))                        # (256, 256, 3)
     return image_numpy.astype(imtype)
 
 

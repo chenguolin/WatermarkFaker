@@ -1,7 +1,7 @@
 import torch
 from . import networks
 from watermarks import lsb
-from utils.util import tensor2im
+from utils.util import tensor2im, bits2im
 from .base_model import BaseModel
 
 class Pix2PixModel(BaseModel):
@@ -30,6 +30,7 @@ class Pix2PixModel(BaseModel):
         By default, they use vanilla GAN loss, UNet with batchnorm, and aligned datasets.
         """
         # changing the default values to match the pix2pix paper (https://phillipi.github.io/pix2pix/)
+        parser.set_defaults(input_nc=3*8, output_nc=3*8)
         parser.set_defaults(norm='batch', netG='unet_256', dataset_mode='aligned')
         if is_train:
             parser.set_defaults(pool_size=0, gan_mode='vanilla')
@@ -47,7 +48,7 @@ class Pix2PixModel(BaseModel):
         # specify the training losses you want to print out. The training/test scripts will call <BaseModel.get_current_losses>
         self.loss_names = ['G_GAN', 'G_L1', 'D_real', 'D_fake']
         # specify the images you want to save/display. The training/test scripts will call <BaseModel.get_current_visuals>
-        self.visual_names = ['real_A', 'fake_B', 'fake_watermark']
+        self.visual_names = ['real_A_img', 'fake_B_img', 'fake_watermark']
         # specify the models you want to save to the disk. The training/test scripts will call <BaseModel.save_networks> and <BaseModel.load_networks>
         if self.isTrain:
             self.model_names = ['G', 'D']
@@ -81,13 +82,15 @@ class Pix2PixModel(BaseModel):
         """
         AtoB = self.opt.direction == 'AtoB'
         self.real_A = Input['A' if AtoB else 'B'].to(self.device)
+        self.real_A_img = bits2im(self.real_A)
         self.real_B = Input['B' if AtoB else 'A'].to(self.device)
+        self.real_B_img = bits2im(self.real_B)
         self.image_paths = Input['A_paths' if AtoB else 'B_paths']
 
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         self.fake_B = self.netG(self.real_A)  # G(A)
-        self.fake_watermark = lsb.LSB().extract(tensor2im(self.fake_B))
+        self.fake_watermark = lsb.LSB().extract(bits2im(self.fake_B))
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
