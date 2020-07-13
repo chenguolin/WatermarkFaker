@@ -2,9 +2,9 @@ import numpy as np
 from watermarks.base_watermark import BaseWatermark
 
 
-class DFT:
+class DFT(BaseWatermark):
     def __init__(self, alpha=5, save_watermark=False):
-        super(BaseWatermark).__init__()
+        BaseWatermark.__init__(self)
         self.alpha = alpha
         self.save_watermark = save_watermark
 

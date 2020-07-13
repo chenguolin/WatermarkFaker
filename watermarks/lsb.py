@@ -4,7 +4,7 @@ from watermarks.base_watermark import BaseWatermark
 
 class LSB(BaseWatermark):
     def __init__(self):
-        super(BaseWatermark).__init__()
+        BaseWatermark.__init__(self)
 
     def __pixel_embed(self, origin, info):
         origin = format(origin, '08b')
