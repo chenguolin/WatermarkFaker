@@ -6,6 +6,7 @@
 */**/__pycache__
 datasets/
 checkpoints/
+results/
 *.png
 .idea
 .vscode
