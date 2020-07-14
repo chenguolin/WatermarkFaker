@@ -25,7 +25,7 @@ bash ./scripts/train_pix2pix.sh
 ```
 - Windows
 ```
-python train.py --dataroot ../datasets/lsb --name lsb_pix2pix --model pix2pix --netG unet_256 --netD basic --max_dataset_size 12000 --norm batch --n_epochs 5 --n_epochs_decay 5 --gan_mode vanilla --pool_size 0
+python train.py --dataroot ../datasets/lsb --name lsb_pix2pix-bits --model pix2pix --netG unet_256 --netD basic --max_dataset_size 12000 --norm batch --n_epochs 1 --n_epochs_decay 0 --gan_mode vanilla --pool_size 0 --display_freq 100 --expand_bits
 ```
 
 ## 0x03 测试网络：
@@ -35,5 +35,5 @@ bash ./scripts/test_pix2pix.sh
 ```
 - Windows
 ```
-python test.py --dataroot ../datasets/lsb --name lsb_pix2pix --model pix2pix --netG unet_256
+python test.py --dataroot ../datasets/lsb --results_dir ./results/ --name lsb_pix2pix-bits --model pix2pix --netG unet_256 --num_test 50 --phase test --eval --expand_bits --epoch latest
 ```
