@@ -1,7 +1,7 @@
 import torch
 from . import networks
 from watermarks import lsb
-from utils.util import tensor2im
+from utils.util import tensor2im, bits2im
 from .base_model import BaseModel
 
 class Pix2PixModel(BaseModel):
@@ -30,11 +30,8 @@ class Pix2PixModel(BaseModel):
         By default, they use vanilla GAN loss, UNet with batchnorm, and aligned datasets.
         """
         # changing the default values to match the pix2pix paper (https://phillipi.github.io/pix2pix/)
-        parser.set_defaults(norm='batch', netG='unet_256', dataset_mode='aligned')
         if is_train:
-            parser.set_defaults(pool_size=0, gan_mode='vanilla')
             parser.add_argument('--lambda_L1', type=float, default=100.0, help='weight for L1 loss')
-
         return parser
 
     def __init__(self, opt):
@@ -47,13 +44,16 @@ class Pix2PixModel(BaseModel):
         # specify the training losses you want to print out. The training/test scripts will call <BaseModel.get_current_losses>
         self.loss_names = ['G_GAN', 'G_L1', 'D_real', 'D_fake']
         # specify the images you want to save/display. The training/test scripts will call <BaseModel.get_current_visuals>
-        self.visual_names = ['real_A', 'fake_B', 'fake_watermark']
+        self.visual_names = ['real_A_img', 'fake_B_img', 'fake_watermark']
         # specify the models you want to save to the disk. The training/test scripts will call <BaseModel.save_networks> and <BaseModel.load_networks>
         if self.isTrain:
             self.model_names = ['G', 'D']
         else:  # during test time, only load G
             self.model_names = ['G']
         # define networks (both generator and discriminator)
+        if opt.expand_bits:  # expand each pixel channel to 8 bits
+            opt.input_nc *= 8
+            opt.output_nc *= 8
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.netG, opt.norm,
                                       not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
 
@@ -80,14 +80,29 @@ class Pix2PixModel(BaseModel):
         The option 'direction' can be used to swap images in domain A and domain B.
         """
         AtoB = self.opt.direction == 'AtoB'
+        
         self.real_A = Input['A' if AtoB else 'B'].to(self.device)
+        if self.opt.expand_bits:
+            self.real_A_img = bits2im(self.real_A)
+        else:
+            self.real_A_img = self.real_A.detach()
+        
         self.real_B = Input['B' if AtoB else 'A'].to(self.device)
+        if self.opt.expand_bits:
+            self.real_B_img = bits2im(self.real_B)
+        else:
+            self.real_B_img = self.real_B.detach()
+        
         self.image_paths = Input['A_paths' if AtoB else 'B_paths']
 
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         self.fake_B = self.netG(self.real_A)  # G(A)
-        self.fake_watermark = lsb.LSB().extract(tensor2im(self.fake_B))
+        if self.opt.expand_bits:
+            self.fake_B_img = bits2im(self.fake_B)
+        else:
+            self.fake_B_img = self.fake_B.detach()
+        self.fake_watermark = lsb.LSB().extract(tensor2im(self.fake_B_img))
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
