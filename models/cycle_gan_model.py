@@ -57,10 +57,11 @@ class CycleGANModel(BaseModel):
         self.loss_names = ['D_A', 'G_A', 'cycle_A', 'idt_A', 'D_B', 'G_B', 'cycle_B', 'idt_B']
         # specify the images you want to save/display. The training/test scripts will call <BaseModel.get_current_visuals>
         visual_names_A = ['real_A_img', 'fake_B_img', 'rec_A_img', 'fake_watermark']
-        visual_names_B = ['real_B_img', 'fake_A_img', 'rec_B_img', 'rec_watermark']
+        visual_names_B = []  # ['real_B', 'fake_A', 'rec_B']
         if self.isTrain and self.opt.lambda_identity > 0.0:  # if identity loss is used, we also visualize idt_B=G_A(B) ad idt_A=G_A(B)
-            visual_names_A.append('idt_B')
-            visual_names_B.append('idt_A')
+            pass
+            # visual_names_A.append('idt_B')
+            # visual_names_B.append('idt_A')
 
         self.visual_names = visual_names_A + visual_names_B  # combine visualizations for A and B
         # specify the models you want to save to the disk. The training/test scripts will call <BaseModel.save_networks> and <BaseModel.load_networks>.
@@ -118,11 +119,6 @@ class CycleGANModel(BaseModel):
             self.real_A_img = self.real_A.detach()
         
         self.real_B = Input['B' if AtoB else 'A'].to(self.device)
-        if self.opt.expand_bits:
-            self.real_B_img = bits2im(self.real_B)
-        else:
-            self.real_B_img = self.real_B.detach()
-        
         self.image_paths = Input['A_paths' if AtoB else 'B_paths']
 
     def forward(self):
@@ -140,19 +136,8 @@ class CycleGANModel(BaseModel):
             self.rec_A_img = self.rec_A.detach()
         
         self.fake_A = self.netG_B(self.real_B)  # G_B(B)
-        if self.opt.expand_bits:
-            self.fake_A_img = bits2im(self.fake_A)
-        else:
-            self.fake_A_img = self.fake_A.detach()
-        
         self.rec_B = self.netG_A(self.fake_A)   # G_A(G_B(B))
-        if self.opt.expand_bits:
-            self.rec_B_img = bits2im(self.rec_B)
-        else:
-            self.rec_B_img = self.rec_B.detach()
-
-        self.fake_watermark = lsb.LSB().extract(tensor2im(self.fake_B_img))
-        self.rec_watermark = lsb.LSB().extract(tensor2im(self.rec_B_img))
+        self.fake_watermark = lsb.LSB().extract(tensor2im(self.fake_B_img))  # extract
 
     def backward_D_basic(self, netD, real, fake):
         """Calculate GAN loss for the discriminator.
