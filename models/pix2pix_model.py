@@ -96,12 +96,13 @@ class Pix2PixModel(BaseModel):
         self.image_paths = Input['A_paths' if AtoB else 'B_paths']
 
     def forward(self):
-        """Run forward pass; called by both functions <optimize_parameters> and <test>."""
+        """Run forward pass; called by both functions <optimize_parameters> and <test>"""
         self.fake_B = self.netG(self.real_A)  # G(A)
         if self.opt.expand_bits:
             self.fake_B_img = bits2im(self.fake_B)
         else:
             self.fake_B_img = self.fake_B.detach()
+        
         self.fake_watermark = lsb.LSB().extract(tensor2im(self.fake_B_img))
 
     def backward_D(self):
@@ -131,6 +132,7 @@ class Pix2PixModel(BaseModel):
         self.loss_G.backward()
 
     def optimize_parameters(self):
+        """Calculate losses, gradients, and update network weights; called in every training iteration"""
         self.forward()                   # compute fake images: G(A)
         # update D
         self.set_requires_grad(self.netD, True)  # enable backprop for D
