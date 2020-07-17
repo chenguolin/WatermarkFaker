@@ -170,6 +170,8 @@ def __print_size_warning(ow, oh, w, h):
 
 def __transform_to_bits(img):
     img = np.array(img)
+    if img.ndim == 2:
+        img = np.expand_dims(img, axis=2)
     bit_layers = []
     channel_layers = []
     for c in range(img.shape[2]):
