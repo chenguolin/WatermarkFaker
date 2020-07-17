@@ -8,26 +8,33 @@ import numpy as np
 from . import util
 
 
-def embed_dataset(algorithm, source_path, watermark_path, output_path, RGB=True):
+def embed_dataset(alg, source_dir, watermark_path, output_dir, RGB=True, combine=True):
     """Embed original dataset by a watermark algorithm.
 
     Parameters:
-        algorithm (class)    -- a watermark algorithm
-        source_path (str)    -- the path of original images file
+        alg (class instance) -- a watermark algorithm
+        source_dir (str)     -- the path of dir that contains original images
         watermark_path (str) -- the path of the watermark image
-        output_path (str)    -- the path to save watermarked images
+        output_dir (str)     -- the path to dir to save watermarked images
         RGB (bool)           -- read RGB (True) or grayscale (False)
+        combine (bool)       -- if True: combine original and watermarked images as paired images
     """
-    alg = algorithm()
-    util.mkdir(output_path)
-    for file_name in os.listdir(source_path):
-        image_path = os.path.join(source_path, file_name)
-        image_wm_path = os.path.join(output_path, file_name)
+    util.mkdir(output_dir)
+    for file_name in os.listdir(source_dir):
+        image_path = os.path.join(source_dir, file_name)
+        output_path = os.path.join(output_dir, file_name)
 
         image = cv2.imread(image_path, flags=RGB)
         watermark = cv2.imread(watermark_path, flags=RGB)
+        image_wm = alg.embed(image, watermark)
 
-        cv2.imwrite(image_wm_path, alg.embed(image, watermark))
+        if combine:
+            output = np.concatenate((image, image_wm), axis=1)  # concatenate by column
+        else:
+            output = image_wm
+
+        cv2.imwrite(output_path, output)
+        break
 
 
 def test_watermark(algorithm):
