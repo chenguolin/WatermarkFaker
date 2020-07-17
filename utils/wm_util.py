@@ -5,8 +5,7 @@ import os
 import cv2
 import argparse
 import numpy as np
-from utils import util
-from watermarks import lsb, dft, dct
+from . import util
 
 
 def embed_dataset(algorithm, source_path, watermark_path, output_path, RGB=True):
@@ -35,7 +34,7 @@ def test_watermark(algorithm):
     """Apply the `lena.png` as watermark algorithm to `test.png`.
     
     Parameter:
-        algorithm (class)            -- a watermark algorithm
+        algorithm (class) -- a watermark algorithm
     """
     alg = algorithm()
 
@@ -90,7 +89,3 @@ def combine(left, right, output, RGB=True):
         img2 = cv2.imread(os.path.join(right, filename), flags=RGB)
         img = np.concatenate((img1, img2), axis=1)  # concatenate by column
         cv2.imwrite(os.path.join(output, filename), img)
-
-
-if __name__ == '__main__':
-    test_watermark(dct.DCT)

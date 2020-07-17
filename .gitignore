@@ -8,6 +8,7 @@ datasets/
 checkpoints/
 results/
 *.png
+*.jpg
 .idea
 .vscode
 temp.*
