@@ -4,7 +4,7 @@ from watermarks.base_watermark import BaseWatermark
 
 
 class RobustLSB(BaseWatermark):
-    def __init__(self, k=8, threshold=0.97, verbose=False, save_watermark=False):
+    def __init__(self, k=32, threshold=0.97, verbose=False, save_watermark=False):
         BaseWatermark.__init__(self, save_watermark)
         self.k = k  # divide the image and watermark into blocks, whose shape is k * k
         self.threshold = threshold
