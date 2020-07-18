@@ -37,7 +37,7 @@ def embed_dataset(alg, source_dir, watermark_path, output_dir, RGB=True, combine
         cv2.imwrite(output_path, output)
 
 
-def test_watermark(alg, image_path="./images/test.png", watermark_path="./images/lena.png", RGB=True):
+def test_watermark(alg, image_path="./images/test.png", watermark_path="./images/lena.png", suffix='', RGB=True):
     """Apply the `lena.png` as watermark algorithm to `test.png`.
     
     Parameter:
@@ -48,10 +48,10 @@ def test_watermark(alg, image_path="./images/test.png", watermark_path="./images
     watermark = cv2.imread(watermark_path, flags=int(RGB))
 
     image_wm = alg.embed(image, watermark)
-    cv2.imwrite("./images/test_.png", image_wm)
+    cv2.imwrite("./images/test_" + suffix + ".png", image_wm)
 
-    watermark_ = alg.extract(image_wm)
-    cv2.imwrite("./images/lena_.png", watermark_)
+    watermark_ = alg.extract(image_wm, image)
+    cv2.imwrite("./images/lena_" + suffix + ".png", watermark_)
 
 
 def combine(left, right, output, RGB=True):
