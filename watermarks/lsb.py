@@ -31,7 +31,7 @@ class LSB(BaseWatermark):
     def __pixel_extract(self, output):
         output = format(output, '08b')
         lsb = output[-self.bits:]
-        info_ = int(lsb + '0'*6, 2)
+        info_ = int(lsb + '0'*(8-self.bits), 2)
         return info_
 
     def extract(self, image_wm, image=None):
