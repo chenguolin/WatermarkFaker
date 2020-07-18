@@ -1,8 +1,8 @@
 import torch
 from . import networks
-from watermarks import lsb
-from utils.util import tensor2im, bits2im
 from .base_model import BaseModel
+from watermarks import lsb, rlsb
+from utils.util import tensor2im, bits2im
 
 class Pix2PixModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
@@ -103,7 +103,7 @@ class Pix2PixModel(BaseModel):
         else:
             self.fake_B_img = self.fake_B.detach()
         
-        self.fake_watermark = lsb.LSB().extract(tensor2im(self.fake_B_img))
+        self.fake_watermark = rlsb.RobustLSB().extract(tensor2im(self.fake_B_img), tensor2im(self.real_A_img))
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
