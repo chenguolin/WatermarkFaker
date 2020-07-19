@@ -93,6 +93,7 @@ class Pix2PixModel(BaseModel):
         else:
             self.real_B_img = self.real_B.detach()
         
+        # self.real_watermark = lsb.LSB().extract(tensor2im(self.real_B_img))
         self.real_watermark = rlsb.RobustLSB().extract(tensor2im(self.real_B_img), tensor2im(self.real_A_img))
         self.image_paths = Input['A_paths' if AtoB else 'B_paths']
 
@@ -104,6 +105,7 @@ class Pix2PixModel(BaseModel):
         else:
             self.fake_B_img = self.fake_B.detach()
         
+        # self.fake_watermark = lsb.LSB().extract(tensor2im(self.fake_B_img))
         self.fake_watermark = rlsb.RobustLSB().extract(tensor2im(self.fake_B_img), tensor2im(self.real_A_img))
 
     def backward_D(self):
