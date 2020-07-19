@@ -44,7 +44,7 @@ class Pix2PixModel(BaseModel):
         # specify the training losses you want to print out. The training/test scripts will call <BaseModel.get_current_losses>
         self.loss_names = ['G_GAN', 'G_L1', 'D_real', 'D_fake']
         # specify the images you want to save/display. The training/test scripts will call <BaseModel.get_current_visuals>
-        self.visual_names = ['real_A_img', 'fake_B_img', 'fake_watermark']
+        self.visual_names = ['real_B_img', 'fake_B_img', 'real_watermark', 'fake_watermark']
         # specify the models you want to save to the disk. The training/test scripts will call <BaseModel.save_networks> and <BaseModel.load_networks>
         if self.isTrain:
             self.model_names = ['G', 'D']
@@ -93,6 +93,8 @@ class Pix2PixModel(BaseModel):
         else:
             self.real_B_img = self.real_B.detach()
         
+        # self.real_watermark = lsb.LSB().extract(tensor2im(self.real_B_img))
+        self.real_watermark = rlsb.RobustLSB().extract(tensor2im(self.real_B_img), tensor2im(self.real_A_img))
         self.image_paths = Input['A_paths' if AtoB else 'B_paths']
 
     def forward(self):
@@ -103,6 +105,7 @@ class Pix2PixModel(BaseModel):
         else:
             self.fake_B_img = self.fake_B.detach()
         
+        # self.fake_watermark = lsb.LSB().extract(tensor2im(self.fake_B_img))
         self.fake_watermark = rlsb.RobustLSB().extract(tensor2im(self.fake_B_img), tensor2im(self.real_A_img))
 
     def backward_D(self):
