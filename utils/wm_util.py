@@ -9,7 +9,7 @@ from . import util
 from watermarks import lsb
 
 
-def embed_dataset(alg, source_dir, watermark_path, output_dir, RGB=True, combine=True):
+def embed_dataset(alg, source_dir, watermark_path, output_dir, RGB_im=True, RGB_wm=True, combine=True):
     """Embed original dataset by a watermark algorithm.
 
     Parameters:
@@ -23,10 +23,13 @@ def embed_dataset(alg, source_dir, watermark_path, output_dir, RGB=True, combine
     util.mkdir(output_dir)
     for file_name in os.listdir(source_dir):
         image_path = os.path.join(source_dir, file_name)
-        output_path = os.path.join(output_dir, file_name)
+        if 'A' in source_dir:  # get original images from unaligned-files
+            output_path = os.path.join(output_dir, os.path.splitext(file_name)[0][:-2]+os.path.splitext(file_name)[1])
+        else:
+            output_path = os.path.join(output_dir, file_name)
 
-        image = cv2.imread(image_path, flags=int(RGB))
-        watermark = cv2.imread(watermark_path, flags=int(RGB))
+        image = cv2.imread(image_path, flags=int(RGB_im))
+        watermark = cv2.imread(watermark_path, flags=int(RGB_wm))
         image_wm = alg.embed(image, watermark)
 
         if combine:
@@ -37,15 +40,15 @@ def embed_dataset(alg, source_dir, watermark_path, output_dir, RGB=True, combine
         cv2.imwrite(output_path, output)
 
 
-def test_watermark(alg, image_path="./images/test.png", watermark_path="./images/lena.png", suffix='', RGB=True):
+def test_watermark(alg, image_path="./images/test.png", watermark_path="./images/lena.png", suffix='', RGB_im=True, RGB_wm=True):
     """Apply the `lena.png` as watermark algorithm to `test.png`.
     
     Parameter:
         alg (class instance) -- a watermark algorithm
         RGB (bool)           -- read RGB (True) or grayscale (False)
     """
-    image = cv2.imread(image_path, flags=int(RGB))
-    watermark = cv2.imread(watermark_path, flags=int(RGB))
+    image = cv2.imread(image_path, flags=int(RGB_im))
+    watermark = cv2.imread(watermark_path, flags=int(RGB_wm))
 
     image_wm = alg.embed(image, watermark)
     cv2.imwrite("./images/test_" + suffix + ".png", image_wm)
