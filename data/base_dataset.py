@@ -101,7 +101,7 @@ def get_transform(opt, params=None, grayscale=False, method=Image.BICUBIC, conve
     if opt.preprocess == 'none':
         transform_list.append(transforms.Lambda(lambda img: __make_power_2(img, base=4, method=method)))
 
-    if not opt.no_flip:
+    if opt.flip:
         if params is None:
             transform_list.append(transforms.RandomHorizontalFlip())
         elif params['flip']:
@@ -177,5 +177,5 @@ def __transform_to_bits(img):
     for c in range(img.shape[2]):
         for b in range(7, -1, -1):
             bit_layers.append((img[:, :, c] >> b) & 1)  # ith bit layer
-    bits_numpy = (np.array(bit_layers).astype('float32') + 0.5) / 2 # (24, 256, 256)
+    bits_numpy = np.array(bit_layers).astype('float32') # (24, 256, 256)
     return torch.from_numpy(bits_numpy * 2 - 1)         # to tensor and normalize
