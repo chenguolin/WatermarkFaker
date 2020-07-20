@@ -72,3 +72,23 @@ def combine(left, right, output, RGB=True):
         img2 = cv2.imread(os.path.join(right, filename), flags=RGB)
         img = np.concatenate((img1, img2), axis=1)  # concatenate by column
         cv2.imwrite(os.path.join(output, filename), img)
+
+
+def read_image_from_txt(path="./images/lena_b.txt", shape=(256, 256)):
+    """Read a binary image from a .txt file which only contains 0 & 1.
+    
+    Parameter:
+        path (str)    -- path of the .txt file
+        shape (tuple) -- shape of the output image
+
+    Return:
+        image (numpy.array) -- a binary image whose pixels are either 0 or 255
+    """
+    with open(path, 'r') as f:
+        string = f.read()
+        print(len(string))
+        image = np.zeros(shape)
+        for i in range(shape[0]):
+            for j in range(shape[1]):
+                image[i, j] = int(string[i*shape[0] + j]) * 255
+        cv2.imwrite("./images/binary_image.png", image.astype('uint8'))
