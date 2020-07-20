@@ -16,7 +16,7 @@ class BaseWatermark(ABC):
         pass
 
     @abstractmethod
-    def embed(self, image, waermark):
+    def embed(self, image, watermark):
         """Embed the image by the watermark.
         
         Parameters:
