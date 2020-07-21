@@ -201,7 +201,7 @@ class StegNet(nn.Module):
 
 
 def train():
-    epochs = 1
+    epochs = 10
     train_losses = []
     batch_size = 1
 
@@ -218,11 +218,6 @@ def train():
             optimizer.zero_grad()
             image, watermark = dic['image'].to(device), dic['watermark'].to(device)
             e_out, dp_out, ds_out = model.forward((image, watermark))
-            util.save_image(util.tensor2im(image), "./temp/image.png")
-            util.save_image(util.tensor2im(watermark), "./temp/watermark.png")
-            util.save_image(util.tensor2im(e_out), "./temp/encode_out.png")
-            util.save_image(util.tensor2im(dp_out), "./temp/decoder_payload.png")
-            util.save_image(util.tensor2im(ds_out), "./temp/decoder_source.png")
 
             e_loss = criterion(e_out.view((-1, 256*256*3)), image.view((-1, 256*256*3)))
             dp_loss = criterion(dp_out.view((-1, 256*256)), watermark.view((-1, 256*256)))
@@ -232,6 +227,12 @@ def train():
             loss.backward()
             optimizer.step()
             train_loss += loss.item()
-            print("Train loss in batch [%05d]: %f" % (i+1, loss.item()))
-        print("Train loss in epoch [%05d]: %f" % (epoch, train_loss/batch_size))
-    torch.save(model.state_dict(), "cnned.pkl")
+            if i % 200 == 0:
+                print("[%03d]  Train loss in batch [%05d]: %f" % (epoch+1, i+1, loss.item()))
+                util.save_image(util.tensor2im(image), "./temp/image.png")
+                util.save_image(util.tensor2im(watermark), "./temp/watermark.png")
+                util.save_image(util.tensor2im(e_out), "./temp/encode_out.png")
+                util.save_image(util.tensor2im(dp_out), "./temp/decoder_payload.png")
+                util.save_image(util.tensor2im(ds_out), "./temp/decoder_source.png")
+        print("Average train loss in epoch [%03d]: %f" % (epoch+1, train_loss/len(train_loader)))
+        torch.save(model.state_dict(), "./watermarks/cnned.pth")
