@@ -3,13 +3,14 @@ This module contains some helper functions related to watermarks.
 """
 import os
 import cv2
+import skimage
 import argparse
 import numpy as np
 from . import util
-from watermarks import lsb
 
 
-def embed_dataset(alg, source_dir, watermark_path, output_dir, RGB_im=True, RGB_wm=True, combine=True):
+def embed_dataset(alg, source_dir, watermark_path, output_dir, RGB_im=True, 
+                    RGB_wm=True, combine=True, tensor=False):
     """Embed original dataset by a watermark algorithm.
 
     Parameters:
@@ -30,7 +31,11 @@ def embed_dataset(alg, source_dir, watermark_path, output_dir, RGB_im=True, RGB_
 
         image = cv2.imread(image_path, flags=int(RGB_im))
         watermark = cv2.imread(watermark_path, flags=int(RGB_wm))
-        image_wm = alg.embed(image, watermark)
+        if tensor:
+            image_wm = alg.embed(util.im2tensor(image), util.im2tensor(watermark))
+            image_wm = util.tensor2im(image_wm)
+        else:
+            image_wm = alg.embed(image, watermark)
 
         if combine:
             output = np.concatenate((image, image_wm), axis=1)  # concatenate by column
@@ -40,7 +45,8 @@ def embed_dataset(alg, source_dir, watermark_path, output_dir, RGB_im=True, RGB_
         cv2.imwrite(output_path, output)
 
 
-def test_watermark(alg, image_path="./images/test.png", watermark_path="./images/lena.png", suffix='', RGB_im=True, RGB_wm=True):
+def test_watermark(alg, image_path="./images/test.png", watermark_path="./images/lena.png", 
+                    suffix='', RGB_im=True, RGB_wm=True, tensor=False):
     """Apply the `lena.png` as watermark algorithm to `test.png`.
     
     Parameter:
@@ -50,11 +56,14 @@ def test_watermark(alg, image_path="./images/test.png", watermark_path="./images
     image = cv2.imread(image_path, flags=int(RGB_im))
     watermark = cv2.imread(watermark_path, flags=int(RGB_wm))
 
-    image_wm = alg.embed(image, watermark)
-    cv2.imwrite("./images/test_" + suffix + ".png", image_wm)
+    if tensor:
+        image_wm = alg.embed(util.im2tensor(image), util.im2tensor(watermark))
+    else:
+        image_wm = alg.embed(image, watermark)
+    cv2.imwrite("./images/test_" + suffix + ".png", util.tensor2im(image_wm))
 
     watermark_ = alg.extract(image_wm, image)
-    cv2.imwrite("./images/lena_" + suffix + ".png", watermark_)
+    cv2.imwrite("./images/lena_" + suffix + ".png", util.tensor2im(watermark_))
 
 
 def combine(left, right, output, RGB=True):

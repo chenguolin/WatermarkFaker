@@ -169,13 +169,15 @@ class StegNet(nn.Module, BaseWatermark):
         return image_wm, watermark_
 
 
-def train():
-    epochs = 10
+def train(continue_train=False):
+    epochs = 50
     learning_rate = 0.0001
     batch_size = 1
     alpha, beta = 1, 1
 
     model = StegNet().to(device)
+    if continue_train:
+        model.load_state_dict(torch.load("./watermarks/cnned.pth"))
     criterion = nn.MSELoss().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 

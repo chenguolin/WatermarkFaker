@@ -1,8 +1,8 @@
 import torch
 from . import networks
 from .base_model import BaseModel
-from watermarks import lsb, rlsb
-from utils.util import tensor2im, bits2im
+from watermarks import lsb, rlsb, cnned
+from utils.util import tensor2im, bits2im, im2tensor
 
 class Pix2PixModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
@@ -94,7 +94,10 @@ class Pix2PixModel(BaseModel):
             self.real_B_img = self.real_B.detach()
         
         # self.real_watermark = lsb.LSB().extract(tensor2im(self.real_B_img))
-        self.real_watermark = rlsb.RobustLSB().extract(tensor2im(self.real_B_img), tensor2im(self.real_A_img))
+        # self.real_watermark = rlsb.RobustLSB().extract(tensor2im(self.real_B_img), tensor2im(self.real_A_img))
+        alg = cnned.StegNet()
+        alg.load_state_dict(torch.load("./watermarks/cnned.pth"))
+        self.real_watermark = alg.extract(im2tensor(tensor2im(self.real_B_img)))
         self.image_paths = Input['A_paths' if AtoB else 'B_paths']
 
     def forward(self):
@@ -106,7 +109,10 @@ class Pix2PixModel(BaseModel):
             self.fake_B_img = self.fake_B.detach()
         
         # self.fake_watermark = lsb.LSB().extract(tensor2im(self.fake_B_img))
-        self.fake_watermark = rlsb.RobustLSB().extract(tensor2im(self.fake_B_img), tensor2im(self.real_A_img))
+        # self.fake_watermark = rlsb.RobustLSB().extract(tensor2im(self.fake_B_img), tensor2im(self.real_A_img))
+        alg = cnned.StegNet()
+        alg.load_state_dict(torch.load("./watermarks/cnned.pth"))
+        self.fake_watermark = alg.extract(im2tensor(tensor2im(self.fake_B_img)))
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""

@@ -4,6 +4,7 @@ This module contains simple helper functions.
 import os
 import cv2
 import torch
+import torchvision
 import numpy as np
 from PIL import Image
 
@@ -44,6 +45,15 @@ def tensor2im(input_image, imtype=np.uint8):
     else:  # if it is a numoy array, do nothing
         image_numpy = input_image
     return image_numpy.astype(imtype)
+
+
+def im2tensor(input_image):
+    """Convert a numpy/PIL image array into a batch Tensor"""
+    transform = torchvision.transforms.Compose([
+        torchvision.transforms.ToTensor(),
+        torchvision.transforms.Normalize(0.5, 0.5)
+    ])
+    return transform(input_image).unsqueeze_(dim=0)
 
 
 def bits2im(input_bits, imtype=np.uint8):
