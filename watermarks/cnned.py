@@ -1,6 +1,7 @@
 import os
 from PIL import Image
 import numpy as np
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 import torch
 from torch import nn
@@ -180,6 +181,7 @@ def train():
 
     train_loader = loadData("../datasets/lsb_un", "trainA", batch_size, shuffle=False)
     data_size = len(train_loader)
+    x, train_losses = [], []
     for epoch in range(epochs):
         model.train()
         train_loss = 0
@@ -197,9 +199,14 @@ def train():
             train_loss += loss.item()
             if i % 200 == 0:
                 print("[%03d]  Train loss in batch [%05d]: %f" % (epoch+1, i+1, loss.item()))
+                x.append(epoch + i/data_size)
+                train_losses.append(loss.item())
                 util.save_image(util.tensor2im(image), "./temp/image.png")
                 util.save_image(util.tensor2im(watermark), "./temp/watermark.png")
                 util.save_image(util.tensor2im(image_wm), "./temp/encode_out.png")
-                util.save_image(util.tensor2im(watermark_), "./temp/decoder_source.png")
+                util.save_image(util.tensor2im(watermark_), "./temp/decoder_out.png")
+                plt.plot(x, train_losses)
+                plt.savefig("./temp/loss.png")
+                plt.clf()
         print("Average train loss in epoch [%03d]: %f" % (epoch+1, train_loss/data_size))
         torch.save(model.state_dict(), "./watermarks/cnned.pth")
