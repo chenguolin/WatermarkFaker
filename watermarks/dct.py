@@ -1,10 +1,11 @@
 import cv2
 import numpy as np
+from scipy.fftpack import dct, idct
 from watermarks.base_watermark import BaseWatermark
 
 
 class DCT(BaseWatermark):
-    def __init__(self, alpha=0.03, block_size=1, save_watermark=False):
+    def __init__(self, alpha=0.03, block_size=8, save_watermark=False):
         BaseWatermark.__init__(self, save_watermark)
         self.alpha = alpha
         self.block_size = block_size
@@ -28,13 +29,9 @@ class DCT(BaseWatermark):
         for i in range(h2):
             for j in range(w2):
                 sub_image = image[i*B : (i+1)*B, j*B : (j+1)*B]
-                sub_image_c = cv2.dct(sub_image)
-                if watermark[i, j] == 0:
-                    tmp = -1
-                else:  # 1
-                    tmp = 1
-                sub_image_c *= (1 + tmp * self.alpha)
-                image_wm[i*B : (i+1)*B, j*B : (j+1)*B] = cv2.idct(sub_image_c)
+                sub_image_dct = dct(sub_image, norm='ortho')
+                sub_image_dct += watermark[i, j] * 2 - 1
+                image_wm[i*B : (i+1)*B, j*B : (j+1)*B] = idct(sub_image_dct, norm='ortho')
         return image_wm
 
     def extract(self, image_wm, image):
@@ -47,9 +44,5 @@ class DCT(BaseWatermark):
             for j in range(w2):
                 sub_image = image[i*B : (i+1)*B, j*B : (j+1)*B].astype('float32')
                 sub_image_wm = image_wm[i*B : (i+1)*B, j*B : (j+1)*B].astype('float32')
-                tmp = np.mean(cv2.dct(sub_image_wm) / (cv2.dct(sub_image) + 1e-6) - 1)
-                if tmp < 0:
-                    watermark_[i, j] = 0
-                else:
-                    watermark_[i, j] = 1
+                watermark_[i, j] = int(np.sum(dct(sub_image_wm) > dct(sub_image)) / self.block_size**2 > 0.5)
         return (watermark_ * 255).astype('uint8')

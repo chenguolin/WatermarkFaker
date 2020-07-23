@@ -56,7 +56,7 @@ def test_watermark(alg, image_path="./images/test.png", watermark_path="./images
     cv2.imwrite("./images/test_" + suffix + ".png", util.tensor2im(image_wm))
 
     watermark_ = alg.extract(image_wm, image)
-    cv2.imwrite("./images/lena_" + suffix + ".png", util.tensor2im(watermark_))
+    cv2.imwrite("./images/cross_" + suffix + ".png", util.tensor2im(watermark_))
 
 
 def combine(left, right, output, RGB=True):
