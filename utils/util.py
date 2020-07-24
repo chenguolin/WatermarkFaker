@@ -27,7 +27,7 @@ def save_image(image_numpy, image_path, aspect_ratio=1.0):
 
 
 def tensor2im(input_image, imtype=np.uint8):
-    """Convert a Tensor array into a numpy image array.
+    """Convert a batch Tensor array into a numpy image array.
     
     Parameters:
         input_image (tensor) -- the input image tensor array
@@ -38,10 +38,10 @@ def tensor2im(input_image, imtype=np.uint8):
             image_tensor = input_image.detach()
         else:
             raise TypeError("Type of the input is neither `np.ndarray` nor `torch.Tensor`")
-        image_numpy = image_tensor[0].cpu().float().numpy()
+        image_numpy = image_tensor[0].cpu().float().numpy()  # .numpy() will cause deviation on pixels  e.g. tensor(-0.5059) -> array(0.5058824)
         if image_numpy.shape[0] == 1:  # grayscale to RGB
             image_numpy = np.tile(image_numpy, (3, 1, 1))  # a -> [a,a,a]
-        image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.0  # [c, h, w] -> [h,w,c] & [-1,1] -> [0,255]
+        image_numpy = np.round((np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.0)  # [c, h, w] -> [h,w,c] & [-1,1] -> [0,255]
     else:  # if it is a numoy array, do nothing
         image_numpy = input_image
     return image_numpy.astype(imtype)
