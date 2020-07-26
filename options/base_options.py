@@ -26,8 +26,7 @@ class BaseOptions:
         parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
         
         # model parameters
-        parser.add_argument('--model', type=str, default='pix2pix', help='chooses which model to use. [pix2pix | cycle_gan | `UNDEFINED`]')
-        parser.add_argument('--expand_bits', action='store_true', help='expand each pixel to 8 (grayscale) or 24 (RGB) bits')
+        parser.add_argument('--model', type=str, default='pix2pix', help='chooses which model to use. [pix2pix | cycle_gan | novel | `UNDEFINED`]')
         parser.add_argument('--input_nc', type=int, default=3, help='# of input image channels. [3 for RGB | 1 for grayscale]')
         parser.add_argument('--output_nc', type=int, default=3, help='# of output image channels. [3 for RGB | 1 for grayscale]')
         parser.add_argument('--ngf', type=int, default=64, help='# of gen filters in the last conv layer')
@@ -53,6 +52,10 @@ class BaseOptions:
         parser.add_argument('--flip', action='store_true', help='if specified, flip the images for data augmentation')
         parser.add_argument('--display_winsize', type=int, default=256, help='display window size for both visdom and HTML')
         
+        # watermark parameters
+        parser.add_argument('--expand_bits', action='store_true', help='expand each pixel to 8 (grayscale) or 24 (RGB) bits')
+        parser.add_argument('--watermark', type=str, default='lsb', help='choose a watermark algorithm for the model to learn [lsb | rlsb | dct | `UNDEFINED`]')
+
         # additional parameters
         parser.add_argument('--epoch', type=str, default='latest', help='which epoch to load? set to latest to use latest cached model')
         parser.add_argument('--load_iter', type=int, default='0', help='which iteration to load? if load_iter > 0, the code will load models by iter_[load_iter]; otherwise, the code will load models by [epoch]')
