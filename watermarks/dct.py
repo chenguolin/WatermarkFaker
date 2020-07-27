@@ -5,7 +5,7 @@ from watermarks.base_watermark import BaseWatermark
 
 
 class DCT(BaseWatermark):
-    def __init__(self, alpha=1, block_size=8, save_watermark=False):
+    def __init__(self, alpha=10, block_size=8, save_watermark=False):
         BaseWatermark.__init__(self, save_watermark)
         self.alpha = alpha
         self.block_size = block_size
@@ -34,7 +34,7 @@ class DCT(BaseWatermark):
                 sub_image_dct[0, 0] += (watermark[i, j] * 2 - 1) * self.alpha
                 # image_wm[i*B : (i+1)*B, j*B : (j+1)*B] = idctn(sub_image_dct, norm='ortho')
                 image_wm[i*B : (i+1)*B, j*B : (j+1)*B] = cv2.idct(sub_image_dct)
-        return image_wm
+        return image_wm.astype('uint8')
 
     def extract(self, image_wm, image):
         h1, w1 = image.shape
