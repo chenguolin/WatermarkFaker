@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 class BaseWatermark(ABC):
     """This class an abstract class (ABC) for watermarks.
 
-    To create a subclass, you need to implement the following five functions:
+    To create a subclass, you need to implement the following three functions:
         -- <__init__>: initialize the class; first call BaceWatermark.__init__(self)
         -- <embed>:    embed `image` (numpy.ndarray) by `watermark` (numpy.ndarray)
         -- <extract>:  extract `watermark_` from `image_wm`; some algorithms require the original image

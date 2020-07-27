@@ -7,6 +7,7 @@ import skimage
 import argparse
 import numpy as np
 from . import util
+from watermarks import lsbmr
 
 
 def embed_dataset(alg, source_dir, watermark_path, output_dir, RGB_im=True, 
@@ -18,7 +19,8 @@ def embed_dataset(alg, source_dir, watermark_path, output_dir, RGB_im=True,
         source_dir (str)     -- the path of dir that contains original images
         watermark_path (str) -- the path of the watermark image
         output_dir (str)     -- the path to dir to save watermarked images
-        RGB (bool)           -- read RGB (True) or grayscale (False)
+        RGB_im (bool)        -- read cover image in RGB (True) or grayscale (False)
+        RGB_wm (bool)        -- read watermark in RGB (True) or grayscale (False)
         combine (bool)       -- if True: combine original and watermarked images as paired images
     """
     util.mkdir(output_dir)
@@ -29,8 +31,12 @@ def embed_dataset(alg, source_dir, watermark_path, output_dir, RGB_im=True,
         else:
             output_path = os.path.join(output_dir, file_name)
 
-        image = cv2.imread(image_path, flags=int(RGB_im))
+        if isinstance(alg, lsbmr.LSBMR):
+            image = adjust_saturated_pixels(cv2.imread(image_path, flags=int(RGB_im)))
+        else:
+            image = cv2.imread(image_path, flags=int(RGB_im))
         watermark = cv2.imread(watermark_path, flags=int(RGB_wm))
+        
         image_wm = alg.embed(image, watermark)
 
         if combine:
@@ -47,16 +53,26 @@ def test_watermark(alg, image_path="./images/test.png", watermark_path="./images
     
     Parameter:
         alg (class instance) -- a watermark algorithm
-        RGB (bool)           -- read RGB (True) or grayscale (False)
+        image_path (str)     -- the path of cover image
+        watermark_path (str) -- the path of watermark
+        suffix (str)         -- customized suffix: output_image_name = original_name + _suffix: e.g., test.png -> test_{suffix}.png
+        RGB_im (bool)        -- read cover image in RGB (True) or grayscale (False)
+        RGB_wm (bool)        -- read watermark in RGB (True) or grayscale (False)
     """
-    image = cv2.imread(image_path, flags=int(RGB_im))
+    if isinstance(alg, lsbmr.LSBMR):
+        image = adjust_saturated_pixels(cv2.imread(image_path, flags=int(RGB_im)))
+    else:
+        image = cv2.imread(image_path, flags=int(RGB_im))
     watermark = cv2.imread(watermark_path, flags=int(RGB_wm))
     
+    image_name, _ = os.path.splitext(image_path)
+    watermark_name, _ = os.path.splitext(watermark_path)
+
     image_wm = alg.embed(image, watermark)
-    cv2.imwrite("./images/test_" + suffix + ".png", util.tensor2im(image_wm))
+    cv2.imwrite(image_name + "_" + suffix + ".png", image_wm)
 
     watermark_ = alg.extract(image_wm, image)
-    cv2.imwrite("./images/cross_" + suffix + ".png", util.tensor2im(watermark_))
+    cv2.imwrite(watermark_name + "_" + suffix + ".png", watermark_)
 
 
 def combine(left, right, output, RGB=True):
@@ -94,3 +110,14 @@ def read_image_from_txt(path="./images/lena_b.txt", shape=(256, 256)):
             for j in range(shape[1]):
                 image[i, j] = int(string[i*shape[0] + j]) * 255
         cv2.imwrite("./images/binary_image.png", image.astype('uint8'))
+
+
+def adjust_saturated_pixels(image):
+    """Adjust saturated pixels (pixels that have either a minimal or maximal allowable value) in an image: 0->1; 255->254.
+
+    Parameters:
+        image (numpy.array) -- cover image
+    """
+    image[image == 255] = 254
+    image[image == 0] = 1
+    return image
