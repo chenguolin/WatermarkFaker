@@ -1,11 +1,10 @@
 import cv2
 import numpy as np
-from scipy.fftpack import dctn, idctn
 from watermarks.base_watermark import BaseWatermark
 
 
 class DCT(BaseWatermark):
-    def __init__(self, alpha=10, block_size=8, save_watermark=False):
+    def __init__(self, alpha=2, block_size=8, save_watermark=False):
         BaseWatermark.__init__(self, save_watermark)
         self.alpha = alpha
         self.block_size = block_size
@@ -19,8 +18,10 @@ class DCT(BaseWatermark):
         if len(image.shape) != 2:
             raise TypeError("Image to embed DFT should be grayscale")
         if h1 != h2 * self.block_size and w1 != w2 * self.block_size:
-            raise ValueError("Watermark's shape should be the `1/block_size` of image's shape")
-        
+            raise ValueError("Watermark's shape should be the `1/%b` of image's shape" % self.block_size)
+        if self.block_size != 8:
+            raise NotImplementedError("Block size should be 8; the other values version maybe implemented in the future")
+
         if self.save_watermark:
             cv2.imwrite('./images/dct_watermark.png', (watermark * 255).astype('uint8'))
 
@@ -29,25 +30,36 @@ class DCT(BaseWatermark):
         for i in range(h2):
             for j in range(w2):
                 sub_image = image[i*B : (i+1)*B, j*B : (j+1)*B]
-                # sub_image_dct = dctn(sub_image, norm='ortho')
                 sub_image_dct = cv2.dct(sub_image)
-                sub_image_dct[0, 0] += (watermark[i, j] * 2 - 1) * self.alpha
-                # image_wm[i*B : (i+1)*B, j*B : (j+1)*B] = idctn(sub_image_dct, norm='ortho')
+                if (watermark[i, j] == 0):
+                    if sub_image_dct[3, 3] > sub_image_dct[4, 4]:
+                        if np.abs(sub_image_dct[3, 3] - sub_image_dct[4, 4]) < 1:
+                            sub_image_dct[4, 4] -= self.alpha
+                        temp = sub_image_dct[3, 3]
+                        sub_image_dct[3, 3] = sub_image_dct[4, 4]
+                        sub_image_dct[4, 4] = temp
+                else:
+                    if sub_image_dct[3, 3] < sub_image_dct[4, 4]:
+                        if np.abs(sub_image_dct[3, 3] - sub_image_dct[4, 4]) < 1:
+                            sub_image_dct[3, 3] -= self.alpha
+                        temp = sub_image_dct[3, 3]
+                        sub_image_dct[3, 3] = sub_image_dct[4, 4]
+                        sub_image_dct[4, 4] = temp
                 image_wm[i*B : (i+1)*B, j*B : (j+1)*B] = cv2.idct(sub_image_dct)
         return image_wm.astype('uint8')
 
-    def extract(self, image_wm, image):
-        h1, w1 = image.shape
+    def extract(self, image_wm, image=None):
+        h1, w1 = image_wm.shape
         B = self.block_size
-        h2, w2 = int(h1/B), int(w1/B)
+        h2, w2 = h1 // B, w1 // B
         watermark_ = np.zeros((h2, w2))
 
         for i in range(h2):
             for j in range(w2):
-                sub_image = image[i*B : (i+1)*B, j*B : (j+1)*B].astype('float32')
                 sub_image_wm = image_wm[i*B : (i+1)*B, j*B : (j+1)*B].astype('float32')
-                watermark_[i, j] = int(
-                    # np.sum(dctn(sub_image_wm, norm='ortho') > dctn(sub_image, norm='ortho')) / self.block_size**2 > 0.5
-                    cv2.dct(sub_image_wm)[0, 0] > cv2.dct(sub_image)[0, 0]
-                )
+                sub_image_wm_dct = cv2.dct(sub_image_wm)
+                if sub_image_wm_dct[3, 3] < sub_image_wm_dct[4, 4]:
+                    watermark_[i, j] = 0
+                else:
+                    watermark_[i, j] = 1
         return (watermark_ * 255).astype('uint8')
