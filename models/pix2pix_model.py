@@ -96,9 +96,9 @@ class Pix2PixModel(BaseModel):
         if 'lsb' == self.opt.watermark:
             self.real_watermark = lsb.LSB().extract(tensor2im(self.real_B_img))
         elif 'lsbm' == self.opt.watermark:
-            self.real_watermark = lsbm.LSBMatching().extract(tensor2im(self.real_B_img))
+            self.real_watermark = lsbm.LSBMatching(channel=2).extract(tensor2im(self.real_B_img))
         elif 'lsbmr' == self.opt.watermark:
-            self.real_watermark = lsbmr.LSBMR().extract(tensor2im(self.real_B_img))
+            self.real_watermark = lsbmr.LSBMR(channel=2).extract(tensor2im(self.real_B_img))
         elif 'rlsb' == self.opt.watermark:
             self.real_watermark = rlsb.RobustLSB().extract(tensor2im(self.real_B_img), tensor2im(self.real_A_img))
         elif 'dct' == self.opt.watermark:
@@ -118,13 +118,13 @@ class Pix2PixModel(BaseModel):
         if 'lsb' == self.opt.watermark:
             self.fake_watermark = lsb.LSB().extract(tensor2im(self.fake_B_img))
         elif 'lsbm' == self.opt.watermark:
-            self.real_watermark = lsbm.LSBMatching().extract(tensor2im(self.fake_B_img))
+            self.fake_watermark = lsbm.LSBMatching(channel=2).extract(tensor2im(self.fake_B_img))
         elif 'lsbmr' == self.opt.watermark:
-            self.real_watermark = lsbmr.LSBMR().extract(tensor2im(self.fake_B_img))
+            self.fake_watermark = lsbmr.LSBMR(channel=2).extract(tensor2im(self.fake_B_img))
         elif 'rlsb' == self.opt.watermark:
             self.fake_watermark = rlsb.RobustLSB().extract(tensor2im(self.fake_B_img), tensor2im(self.real_A_img))
         elif 'dct' == self.opt.watermark:
-            self.real_watermark = dct.DCT().extract(tensor2im(self.fake_B_img), tensor2im(self.real_A_img))
+            self.fake_watermark = dct.DCT().extract(tensor2im(self.fake_B_img), tensor2im(self.real_A_img))
         else:
             raise NotImplementedError("Please choose implemented watermark algorithms. [lsb | lsbm | lsmr | rlsb | dct]")
 

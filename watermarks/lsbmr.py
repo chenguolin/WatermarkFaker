@@ -3,8 +3,9 @@ from watermarks.base_watermark import BaseWatermark
 
 
 class LSBMR(BaseWatermark):
-    def __init__(self, save_watermark=False):
+    def __init__(self, channel=0, save_watermark=False):
         BaseWatermark.__init__(self, save_watermark)
+        self.channel = channel
 
     def __func(self, x1, x2):
         f = (x1 // 2 + x2) % 2
@@ -13,7 +14,7 @@ class LSBMR(BaseWatermark):
     def embed(self, image, watermark):
         h, w = image.shape[:2]
         if image.ndim == 3:
-            image_c = image[:, :, 0].flatten()
+            image_c = image[:, :, self.channel].flatten()
         elif image.ndim == 2:
             image_c = image.flatten()
         watermark = (watermark // 255).flatten()
@@ -27,7 +28,7 @@ class LSBMR(BaseWatermark):
 
         image_wm = np.copy(image)
         if image.ndim ==3:
-            image_wm_c = image_wm[:, :, 0].flatten()
+            image_wm_c = image_wm[:, :, self.channel].flatten()
         elif image.ndim == 2:
             image_wm_c = image_wm.flatten()
         # after embedding, w_i = LSB(y_i); w_i+1 = __func(y_i, y_i+1)
@@ -45,7 +46,7 @@ class LSBMR(BaseWatermark):
                     image_wm_c[i] = image_c[i] + 1
                 image_wm_c[i+1] = image_c[i+1]
         if image.ndim == 3:
-            image_wm[:, :, 0] = image_wm_c.reshape((h, w))
+            image_wm[:, :, self.channel] = image_wm_c.reshape((h, w))
         elif image.ndim == 2:
             image_wm = image_wm_c.reshape((h, w))
         return image_wm
@@ -54,7 +55,7 @@ class LSBMR(BaseWatermark):
         watermark_ = []
         h, w = image_wm.shape[:2]
         if image_wm.ndim == 3:
-            image_wm_c = image_wm[:, :, 0].flatten()
+            image_wm_c = image_wm[:, :, self.channel].flatten()
         elif image_wm.ndim == 2:
             image_wm_c = image_wm.flatten()
         for i in range(0, h*w-1, 2):
