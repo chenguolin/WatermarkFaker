@@ -4,9 +4,8 @@ from watermarks.base_watermark import BaseWatermark
 
 
 class DCT(BaseWatermark):
-    def __init__(self, alpha=2, block_size=8, save_watermark=False):
+    def __init__(self, block_size=8, save_watermark=False):
         BaseWatermark.__init__(self, save_watermark)
-        self.alpha = alpha
         self.block_size = block_size
 
     def embed(self, image, watermark):
@@ -33,15 +32,11 @@ class DCT(BaseWatermark):
                 sub_image_dct = cv2.dct(sub_image)
                 if (watermark[i, j] == 0):
                     if sub_image_dct[3, 3] > sub_image_dct[4, 4]:
-                        if np.abs(sub_image_dct[3, 3] - sub_image_dct[4, 4]) < 1:
-                            sub_image_dct[4, 4] -= self.alpha
                         temp = sub_image_dct[3, 3]
                         sub_image_dct[3, 3] = sub_image_dct[4, 4]
                         sub_image_dct[4, 4] = temp
                 else:
                     if sub_image_dct[3, 3] < sub_image_dct[4, 4]:
-                        if np.abs(sub_image_dct[3, 3] - sub_image_dct[4, 4]) < 1:
-                            sub_image_dct[3, 3] -= self.alpha
                         temp = sub_image_dct[3, 3]
                         sub_image_dct[3, 3] = sub_image_dct[4, 4]
                         sub_image_dct[4, 4] = temp
