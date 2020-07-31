@@ -1,12 +1,12 @@
 import torch
 from . import networks
 from .base_model import BaseModel
-from watermarks import lsb, rlsb
 from pytorch_ssim import SSIM
+from watermarks import lsb, lsbm, lsbmr, rlsb, dct
 from utils.util import tensor2im, bits2im, im2tensor
 
 class NovelModel(BaseModel):
-    """ This class implements our novel model, which is modified from pix2pix.
+    """This class implements our novel model, which is modified from pix2pix.
 
     The model training requires '--dataset_mode aligned' dataset.
     By default, it uses a '--netG unet256' U-Net generator,
@@ -57,7 +57,7 @@ class NovelModel(BaseModel):
             opt.output_nc *= 8
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.netG, opt.norm,
                                       not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
-
+        
         if self.isTrain:  # define a discriminator; conditional GANs need to take both input and output images; Therefore, #channels for D is input_nc + output_nc
             self.netD = networks.define_D(opt.input_nc + opt.output_nc, opt.ndf, opt.netD,
                                           opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids)
@@ -94,18 +94,24 @@ class NovelModel(BaseModel):
             self.real_B_img = bits2im(self.real_B)
         else:
             self.real_B_img = self.real_B.detach()
-
+        
         if 'lsb' == self.opt.watermark:
             self.real_watermark = lsb.LSB().extract(tensor2im(self.real_B_img))
+        elif 'lsbm' == self.opt.watermark:
+            self.real_watermark = lsbm.LSBMatching(channel=2).extract(tensor2im(self.real_B_img))
+        elif 'lsbmr' == self.opt.watermark:
+            self.real_watermark = lsbmr.LSBMR(channel=2).extract(tensor2im(self.real_B_img))
         elif 'rlsb' == self.opt.watermark:
             self.real_watermark = rlsb.RobustLSB().extract(tensor2im(self.real_B_img), tensor2im(self.real_A_img))
+        elif 'dct' == self.opt.watermark:
+            self.real_watermark = dct.DCT().extract(tensor2im(self.real_B_img), tensor2im(self.real_A_img))
         else:
-            raise NotImplementedError("Please choose implemented watermark algorithms. [lsb | rlsb | dct]")
+            raise NotImplementedError("Please choose implemented watermark algorithms. [lsb | lsbm | lsbmr | rlsb | dct]")
         self.image_paths = Input['A_paths' if AtoB else 'B_paths']
 
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>"""
-        self.fake_B = self.netG(self.real_A)
+        self.fake_B = self.netG(self.real_A)  # G(A)
         if self.opt.expand_bits:
             self.fake_B_img = bits2im(self.fake_B)
         else:
@@ -113,10 +119,16 @@ class NovelModel(BaseModel):
         
         if 'lsb' == self.opt.watermark:
             self.fake_watermark = lsb.LSB().extract(tensor2im(self.fake_B_img))
+        elif 'lsbm' == self.opt.watermark:
+            self.fake_watermark = lsbm.LSBMatching(channel=2).extract(tensor2im(self.fake_B_img))
+        elif 'lsbmr' == self.opt.watermark:
+            self.fake_watermark = lsbmr.LSBMR(channel=2).extract(tensor2im(self.fake_B_img))
         elif 'rlsb' == self.opt.watermark:
             self.fake_watermark = rlsb.RobustLSB().extract(tensor2im(self.fake_B_img), tensor2im(self.real_A_img))
-        else:             
-            raise NotImplementedError("Please choose implemented watermark algorithms. [lsb | rlsb | dct]")
+        elif 'dct' == self.opt.watermark:
+            self.fake_watermark = dct.DCT().extract(tensor2im(self.fake_B_img), tensor2im(self.real_A_img))
+        else:
+            raise NotImplementedError("Please choose implemented watermark algorithms. [lsb | lsbm | lsmr | rlsb | dct]")
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
