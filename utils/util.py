@@ -42,8 +42,12 @@ def tensor2im(input_image, imtype=np.uint8):
         if image_numpy.shape[0] == 1:  # grayscale to RGB
             image_numpy = np.tile(image_numpy, (3, 1, 1))  # a -> [a,a,a]
         image_numpy = np.round((np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.0)  # [c, h, w] -> [h,w,c] & [-1,1] -> [0,255]
-    else:  # if it is a numoy array, do nothing
+    else:  # if it is a numoy array, do nothing or transform to RGB
         image_numpy = input_image
+        if image_numpy.ndim == 2:
+            image_numpy = np.expand_dims(image_numpy, 2)
+        if image_numpy.shape[2] == 1:  # grayscale to RGB
+            image_numpy = np.tile(image_numpy, (1, 1, 3))  # a -> [a,a,a]
     return image_numpy.astype(imtype)
 
 
