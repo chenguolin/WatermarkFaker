@@ -17,7 +17,7 @@ class DCT(BaseWatermark):
         if len(image.shape) != 2:
             raise TypeError("Image to embed DFT should be grayscale")
         if h1 != h2 * self.block_size and w1 != w2 * self.block_size:
-            raise ValueError("Watermark's shape should be the `1/%b` of image's shape" % self.block_size)
+            raise ValueError("Watermark's shape should be the `1/%d` of image's shape" % self.block_size)
         if self.block_size != 8:
             raise NotImplementedError("Block size should be 8; the other values version maybe implemented in the future")
 
