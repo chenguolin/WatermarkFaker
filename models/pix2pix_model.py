@@ -102,7 +102,7 @@ class Pix2PixModel(BaseModel):
         elif 'rlsb' == self.opt.watermark:
             self.real_watermark = rlsb.RobustLSB().extract(tensor2im(self.real_B_img), tensor2im(self.real_A_img))
         elif 'dct' == self.opt.watermark:
-            self.real_watermark = dct.DCT().extract(tensor2im(self.real_B_img), tensor2im(self.real_A_img))
+            self.real_watermark = dct.DCT().extract(tensor2im(self.real_B_img))
         else:
             raise NotImplementedError("Please choose implemented watermark algorithms. [lsb | lsbm | lsbmr | rlsb | dct]")
         self.image_paths = Input['A_paths' if AtoB else 'B_paths']
@@ -124,7 +124,7 @@ class Pix2PixModel(BaseModel):
         elif 'rlsb' == self.opt.watermark:
             self.fake_watermark = rlsb.RobustLSB().extract(tensor2im(self.fake_B_img), tensor2im(self.real_A_img))
         elif 'dct' == self.opt.watermark:
-            self.fake_watermark = dct.DCT().extract(tensor2im(self.fake_B_img), tensor2im(self.real_A_img))
+            self.fake_watermark = dct.DCT().extract(tensor2im(self.fake_B_img))
         else:
             raise NotImplementedError("Please choose implemented watermark algorithms. [lsb | lsbm | lsmr | rlsb | dct]")
 

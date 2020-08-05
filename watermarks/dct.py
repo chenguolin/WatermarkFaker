@@ -44,10 +44,12 @@ class DCT(BaseWatermark):
         return image_wm.astype('uint8')
 
     def extract(self, image_wm, image=None):
+        if image_wm.ndim == 3:
+            image_wm = image_wm[:, :, 0]
         h1, w1 = image_wm.shape
         B = self.block_size
         h2, w2 = h1 // B, w1 // B
-        watermark_ = np.zeros((h2, w2))
+        watermark_ = np.zeros((h1, w1, 1))
 
         for i in range(h2):
             for j in range(w2):
@@ -57,4 +59,6 @@ class DCT(BaseWatermark):
                     watermark_[i, j] = 0
                 else:
                     watermark_[i, j] = 1
+        watermark_ = np.tile(watermark_, (1, 1, 3))
+        
         return (watermark_ * 255).astype('uint8')
