@@ -53,6 +53,12 @@ class Pix2PixModel(BaseModel):
         if opt.expand_bits:  # expand each pixel channel to 8 bits
             opt.input_nc *= 8
             opt.output_nc *= 8
+        if opt.expand_bits_remain:  # remain original pixels channels when expanding bits
+            _input_nc, _output_nc = opt.input_nc, opt.output_nc
+            opt.input_nc *= 8
+            opt.input_nc += _input_nc
+            opt.output_nc *= 8
+            opt.output_nc += _output_nc
         # define networks (both generator and discriminator)
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.netG, opt.norm,
                                       not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
