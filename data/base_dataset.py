@@ -111,7 +111,7 @@ def get_transform(opt, params=None, grayscale=False, method=Image.BICUBIC, conve
         convert = False
         transform_list.append(transforms.Lambda(lambda img: __transform_to_bits(img)))
 
-    if opt.remain_pixels:
+    if opt.expand_bits_remain:
         convert = False
         transform_list.append(transforms.Lambda(lambda img: __transform_to_bits_and_pixels(img)))
 
