@@ -54,7 +54,6 @@ class BaseOptions:
         
         # watermark parameters
         parser.add_argument('--expand_bits', action='store_true', help='expand each pixel to 8 (grayscale) or 24 (RGB) bits')
-        parser.add_argument('--expand_bits_remain', action='store_true', help='remain original pixels when expanding bits, i.e. 8+1 channels or 24+3 channels')
         parser.add_argument('--watermark', type=str, default='lsb', help='choose a watermark algorithm for the model to learn [lsb | rlsb | dct | `UNDEFINED`]')
 
         # additional parameters
