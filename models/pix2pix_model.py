@@ -42,12 +42,12 @@ class Pix2PixModel(BaseModel):
         """
         BaseModel.__init__(self, opt)
         # specify the training losses you want to print out. The training/test scripts will call <BaseModel.get_current_losses>
-        self.loss_names = ['G_GAN', 'G_L1', 'D_real', 'D_fake']
+        self.loss_names = ['G_GAN', 'G_L1', 'D_Steg', 'D_real', 'D_fake', 'S_real', 'S_fake']
         # specify the images you want to save/display. The training/test scripts will call <BaseModel.get_current_visuals>
         self.visual_names = ['real_B_img', 'fake_B_img', 'real_watermark', 'fake_watermark']
         # specify the models you want to save to the disk. The training/test scripts will call <BaseModel.save_networks> and <BaseModel.load_networks>
         if self.isTrain:
-            self.model_names = ['G', 'D']
+            self.model_names = ['G', 'D', 'S']
         else:  # during test time, only load G
             self.model_names = ['G']
         if opt.expand_bits:  # expand each pixel channel to 8 bits
@@ -60,16 +60,20 @@ class Pix2PixModel(BaseModel):
         if self.isTrain:
             self.netD = networks.define_D(opt.input_nc + opt.output_nc, opt.ndf, opt.netD,
                                           opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids)
+            self.netS = networks.YeNet(opt.input_nc).to(self.device)
 
         if self.isTrain:
             # define loss functions
             self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)
             self.criterionL1 = torch.nn.L1Loss()
+            self.criterionSteg = torch.nn.CrossEntropyLoss().to(self.device)
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
             self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_D = torch.optim.Adam(self.netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+            self.optimizer_S = torch.optim.Adam(self.netS.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizers.append(self.optimizer_G)
             self.optimizers.append(self.optimizer_D)
+            self.optimizers.append(self.optimizer_S)
 
     def set_input(self, Input):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
@@ -142,16 +146,30 @@ class Pix2PixModel(BaseModel):
         self.loss_D = (self.loss_D_fake + self.loss_D_real) * 0.5
         self.loss_D.backward()
 
+    def backward_S(self):
+        """Calculate GAN loss for the steganograph discriminator"""
+        # Fake; stop backprop to the generator by detaching fake_B
+        pred_fake = self.netS(self.fake_B.detach())
+        self.loss_S_fake = self.criterionSteg(pred_fake, False)
+        # Real
+        pred_real = self.netS(self.real_A)
+        self.loss_S_real = self.criterionSteg(pred_real, True)
+        # combine loss and calculate gradients
+        self.loss_S = (self.loss_S_fake + self.loss_S_real) * 0.5
+        self.loss_S.backward()
+
     def backward_G(self):
         """Calculate GAN and L1 loss for the generator"""
         # First, G(A) should fake the discriminator
         fake_AB = torch.cat((self.real_A, self.fake_B), 1)
-        pred_fake = self.netD(fake_AB)
+        pred_fake_D = self.netD(fake_AB)
+        pred_fake_S = self.netS(self.fake_B)
         self.loss_G_GAN = self.criterionGAN(pred_fake, True)
+        self.loss_G_Steg = self.criterionSteg(pred_fake_S, True)
         # Second, G(A) = B
         self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
         # combine loss and calculate gradients
-        self.loss_G = self.loss_G_GAN + self.loss_G_L1
+        self.loss_G = self.loss_G_GAN + self.loss_G_L1 + self.loss_G_Steg
         self.loss_G.backward()
 
     def optimize_parameters(self):
@@ -162,6 +180,11 @@ class Pix2PixModel(BaseModel):
         self.optimizer_D.zero_grad()     # set D's gradients to zero
         self.backward_D()                # calculate gradients for D
         self.optimizer_D.step()          # update D's weights
+        # update S
+        self.set_requires_grad(self.netS, True)  # enable backprop for S
+        self.optimizer_S.zero_grad()     # set S's gradients to zero
+        self.backward_S()                # calculate gradients for S
+        self.optimizer_S.step()          # update S's weights
         # update G
         self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
         self.optimizer_G.zero_grad()        # set G's gradients to zero
