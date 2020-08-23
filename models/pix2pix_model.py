@@ -42,7 +42,7 @@ class Pix2PixModel(BaseModel):
         """
         BaseModel.__init__(self, opt)
         # specify the training losses you want to print out. The training/test scripts will call <BaseModel.get_current_losses>
-        self.loss_names = ['G_GAN', 'G_L1', 'D_Steg', 'D_real', 'D_fake', 'S_real', 'S_fake']
+        self.loss_names = ['G_GAN', 'G_L1', 'G_Steg', 'D_real', 'D_fake', 'S_real', 'S_fake']
         # specify the images you want to save/display. The training/test scripts will call <BaseModel.get_current_visuals>
         self.visual_names = ['real_B_img', 'fake_B_img', 'real_watermark', 'fake_watermark']
         # specify the models you want to save to the disk. The training/test scripts will call <BaseModel.save_networks> and <BaseModel.load_networks>
@@ -150,10 +150,10 @@ class Pix2PixModel(BaseModel):
         """Calculate GAN loss for the steganograph discriminator"""
         # Fake; stop backprop to the generator by detaching fake_B
         pred_fake = self.netS(self.fake_B.detach())
-        self.loss_S_fake = self.criterionSteg(pred_fake, False)
+        self.loss_S_fake = self.criterionSteg(pred_fake, torch.tensor([0]).to(self.device))
         # Real
         pred_real = self.netS(self.real_A)
-        self.loss_S_real = self.criterionSteg(pred_real, True)
+        self.loss_S_real = self.criterionSteg(pred_real, torch.tensor([1]).to(self.device))
         # combine loss and calculate gradients
         self.loss_S = (self.loss_S_fake + self.loss_S_real) * 0.5
         self.loss_S.backward()
@@ -164,8 +164,8 @@ class Pix2PixModel(BaseModel):
         fake_AB = torch.cat((self.real_A, self.fake_B), 1)
         pred_fake_D = self.netD(fake_AB)
         pred_fake_S = self.netS(self.fake_B)
-        self.loss_G_GAN = self.criterionGAN(pred_fake, True)
-        self.loss_G_Steg = self.criterionSteg(pred_fake_S, True)
+        self.loss_G_GAN = self.criterionGAN(pred_fake_D, True)
+        self.loss_G_Steg = self.criterionSteg(pred_fake_S, torch.tensor([1]).to(self.device))
         # Second, G(A) = B
         self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
         # combine loss and calculate gradients

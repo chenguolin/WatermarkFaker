@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import functools
 import torch.nn as nn
@@ -609,10 +610,11 @@ class PixelDiscriminator(nn.Module):
 ##############################################################################
 
 
-SRM_npy = np.load('SRM_Kernels.npy')
+SRM_path = "/home/wangruowei/chenguo/GAN-for-Digital-Watermarks/models/SRM_Kernels.npy"
+SRM_npy = np.load(SRM_path)
 
 class SRM_conv2d(nn.Module):
-    def __init__(self, intput_nc, stride=1, padding=0):
+    def __init__(self, input_nc, stride=1, padding=0):
         super(SRM_conv2d, self).__init__()
         self.in_channels = input_nc
         self.out_channels = 30
@@ -629,7 +631,7 @@ class SRM_conv2d(nn.Module):
         self.transpose = False
         self.output_padding = (0,)
         self.groups = 1
-        self.weight = Parameter(torch.Tensor(30, 1, 5, 5), \
+        self.weight = Parameter(torch.Tensor(30, 24, 5, 5), \
                                 requires_grad=True)
         self.bias = Parameter(torch.Tensor(30), \
                               requires_grad=True)
@@ -689,7 +691,7 @@ class YeNet(nn.Module):
         self.pool4 = nn.AvgPool2d(3, 2)
         self.block8 = ConvBlock(32, 16, 3, with_bn=self.with_bn)
         self.block9 = ConvBlock(16, 16, 3, 3, with_bn=self.with_bn)
-        self.ip1 = nn.Linear(3 * 3 * 16, 1)
+        self.ip1 = nn.Linear(3 * 3 * 16, 2)
         self.reset_parameters()
 
     def forward(self, x):
