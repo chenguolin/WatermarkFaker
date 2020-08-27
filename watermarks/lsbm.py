@@ -32,12 +32,18 @@ class LSBMatching(BaseWatermark):
             cv2.imwrite("./images/lsbm_watermark.png", watermark * 255)
 
         image_wm = np.copy(image)
-        image_wm[:, :, self.channel] = np.vectorize(self.__pixel_embed)(image[:, :, self.channel], watermark)
+        if image.ndim == 3:
+            image_wm[:, :, self.channel] = np.vectorize(self.__pixel_embed)(image[:, :, self.channel], watermark)
+        elif image.ndim == 2:
+            image_wm = np.vectorize(self.__pixel_embed)(image, watermark)
         return image_wm
 
     def extract(self, image_wm, image=None):
         watermark_ = np.zeros(image_wm.shape)
         for i in range(image_wm.shape[0]):
             for j in range(image_wm.shape[1]):
-                watermark_[i, j] = image_wm[i, j, self.channel] % 2 * 255
+                if image_wm.ndim == 3:
+                    watermark_[i, j] = image_wm[i, j, self.channel] % 2 * 255
+                elif image_wm.ndim == 2:
+                    watermark_[i, j] = image_wm[i, j] % 2 * 255
         return watermark_.astype('uint8')
