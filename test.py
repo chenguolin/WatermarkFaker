@@ -56,6 +56,7 @@ if __name__ == '__main__':
     # For [CycleGAN]: It should not affect CycleGAN as CycleGAN uses instancenorm without dropout.
     if opt.eval:
         model.eval()
+    psnr_im, ssim_im, psnr_wm, ssim_wm = 0.0, 0.0, 0.0, 0.0
     for i, data in enumerate(dataset):
         if i >= opt.num_test:  # only apply our model to opt.num_test images.
             break
@@ -63,7 +64,14 @@ if __name__ == '__main__':
         model.test()           # run inference
         visuals = model.get_current_visuals()  # get image results
         img_path = model.get_image_paths()     # get image paths
+        psnr1, ssim1, psnr2, ssim2 = model.cal_psnr_ssim()   # calculate psnr and ssim
+        psnr_im += psnr1
+        ssim_im += ssim1
+        psnr_wm += psnr2
+        ssim_wm += ssim2
         if i % 5 == 0:  # save images to an HTML file
             print('processing (%04d)-th image... %s' % (i, img_path))
         save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
+    print('Image     PSNR: %f  SSIM: %f' % (psnr_im, ssim_im))
+    print('Watermark PSNR: %f  SSIM: %f' % (psnr_wm, ssim_wm))
     webpage.save()  # save the HTML
