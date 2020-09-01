@@ -1,6 +1,6 @@
 import os
 import torch
-import skimage
+from skimage.metrics import *
 from . import networks
 from collections import OrderedDict
 from abc import ABC, abstractmethod
@@ -143,11 +143,11 @@ class BaseModel(ABC):
         real_watermark = getattr(self, 'real_watermark')
         fake_watermark = getattr(self, 'fake_watermark')
 
-        psnr1 = skimage.metrics.peak_signal_noise_ratio(real_B_img, fake_B_img)
-        ssim1 = skimage.metrics.structural_similarity(real_B_img, fake_B_img, multichannel=(real_B_img.ndim == 3))
+        psnr1 = peak_signal_noise_ratio(real_B_img, fake_B_img)
+        ssim1 = structural_similarity(real_B_img, fake_B_img, multichannel=(real_B_img.ndim == 3))
         
-        psnr2 = skimage.metrics.peak_signal_noise_ratio(real_watermark, fake_watermark)
-        ssim2 = skimage.metrics.structural_similarity(real_watermark, fake_watermark, multichannel=(real_watermark.ndim == 3))
+        psnr2 = peak_signal_noise_ratio(real_watermark, fake_watermark)
+        ssim2 = structural_similarity(real_watermark, fake_watermark, multichannel=(real_watermark.ndim == 3))
         return psnr1, ssim1, psnr2, ssim2
 
     def get_current_losses(self):

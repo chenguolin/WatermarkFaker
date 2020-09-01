@@ -47,4 +47,4 @@ class LSB(BaseWatermark):
             watermark_ = np.vectorize(self.__pixel_extract)(image_wm[:, :, 0])
         else:
             watermark_ = np.vectorize(self.__pixel_extract)(image_wm)
-        return watermark_
+        return watermark_.astype('uint8')

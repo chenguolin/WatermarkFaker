@@ -72,6 +72,10 @@ if __name__ == '__main__':
         if i % 5 == 0:  # save images to an HTML file
             print('processing (%04d)-th image... %s' % (i, img_path))
         save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
+    psnr_im /= opt.num_test
+    ssim_im /= opt.num_test
+    psnr_wm /= opt.num_test
+    ssim_wm /= opt.num_test
     print('Image     PSNR: %f  SSIM: %f' % (psnr_im, ssim_im))
     print('Watermark PSNR: %f  SSIM: %f' % (psnr_wm, ssim_wm))
     webpage.save()  # save the HTML

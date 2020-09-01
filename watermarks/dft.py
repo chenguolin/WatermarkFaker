@@ -35,4 +35,4 @@ class DFT(BaseWatermark):
         
         watermark_ = np.real((image_wm_f - image_f) / self.alpha)
         h, w = watermark_.shape
-        return watermark_[:int(h/2), :int(w/2)]
+        return watermark_[:int(h/2), :int(w/2)].astype('uint8')

@@ -95,4 +95,4 @@ class RobustLSB(BaseWatermark):
                 bits = self.__find_embed_bits(sub_image_wm, sub_image)
                 sub_watermark_ = self.__sub_extract(sub_image_wm, bits)
                 watermark_[i*k:(i+1)*k, j*k:(j+1)*k] = sub_watermark_
-        return watermark_
+        return watermark_.astype('uint8')
