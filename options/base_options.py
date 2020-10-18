@@ -27,8 +27,8 @@ class BaseOptions:
         
         # model parameters
         parser.add_argument('--model', type=str, default='pix2pix', help='chooses which model to use. [pix2pix | cycle_gan | novel | `UNDEFINED`]')
-        parser.add_argument('--input_nc', type=int, default=3, help='# of input image channels. [3 for RGB | 1 for grayscale]')
-        parser.add_argument('--output_nc', type=int, default=3, help='# of output image channels. [3 for RGB | 1 for grayscale]')
+        parser.add_argument('--input_nc', type=int, default=1, help='# of input image channels. [3 for RGB | 1 for grayscale]')
+        parser.add_argument('--output_nc', type=int, default=1, help='# of output image channels. [3 for RGB | 1 for grayscale]')
         parser.add_argument('--ngf', type=int, default=64, help='# of gen filters in the last conv layer')
         parser.add_argument('--ndf', type=int, default=64, help='# of discrim filters in the first conv layer')
         parser.add_argument('--netD', type=str, default='basic', help='specify discriminator architecture [basic | n_layers | pixel]. The basic model is a 70x70 PatchGAN. n_layers allows you to specify the layers in the discriminator')
@@ -55,6 +55,7 @@ class BaseOptions:
         # watermark parameters
         parser.add_argument('--expand_bits', action='store_true', help='expand each pixel to 8 (grayscale) or 24 (RGB) bits')
         parser.add_argument('--watermark', type=str, default='lsb', help='choose a watermark algorithm for the model to learn [lsb | rlsb | dct | `UNDEFINED`]')
+        parser.add_argument('--dct_trans', action='store_true', help="transform input images to dct domain")
 
         # additional parameters
         parser.add_argument('--epoch', type=str, default='latest', help='which epoch to load? set to latest to use latest cached model')
