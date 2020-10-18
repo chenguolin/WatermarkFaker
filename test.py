@@ -57,6 +57,8 @@ if __name__ == '__main__':
     if opt.eval:
         model.eval()
     psnr_im, ssim_im, psnr_wm, ssim_wm = 0.0, 0.0, 0.0, 0.0
+    psnr_real, ssim_real, psnr_fake, ssim_fake = 0.0, 0.0, 0.0, 0.0
+    inf_count, inf_count_ = 0, 0
     for i, data in enumerate(dataset):
         if i >= opt.num_test:  # only apply our model to opt.num_test images.
             break
@@ -64,18 +66,41 @@ if __name__ == '__main__':
         model.test()           # run inference
         visuals = model.get_current_visuals()  # get image results
         img_path = model.get_image_paths()     # get image paths
-        psnr1, ssim1, psnr2, ssim2 = model.cal_psnr_ssim()   # calculate psnr and ssim
+        psnr1, ssim1, psnr2, ssim2, psnr3, ssim3, psnr4, ssim4 = model.cal_psnr_ssim(crop=opt.watermark=='dct')   # calculate psnr and ssim
         psnr_im += psnr1
         ssim_im += ssim1
-        psnr_wm += psnr2
+        if psnr2 == float('inf'):
+            inf_count_ += 1
+        else:
+            psnr_wm += psnr2
         ssim_wm += ssim2
+        if psnr3 == float('inf'):
+            inf_count += 1
+        else:
+            psnr_real += psnr3
+        ssim_real += ssim3
+        psnr_fake += psnr4
+        ssim_fake += ssim4
         if i % 5 == 0:  # save images to an HTML file
             print('processing (%04d)-th image... %s' % (i, img_path))
         save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
     psnr_im /= opt.num_test
     ssim_im /= opt.num_test
-    psnr_wm /= opt.num_test
+    if opt.num_test != inf_count_:
+        psnr_wm /= (opt.num_test - inf_count_)
+    else:
+        psnr_wm = float('inf')
     ssim_wm /= opt.num_test
+    if opt.num_test != inf_count:
+        psnr_real /= (opt.num_test - inf_count)
+    else:
+        psnr_real = float('inf')
+    ssim_real /= opt.num_test
+    psnr_fake /= opt.num_test
+    ssim_fake /= opt.num_test
+    print(inf_count, inf_count_)
     print('Image     PSNR: %f  SSIM: %f' % (psnr_im, ssim_im))
     print('Watermark PSNR: %f  SSIM: %f' % (psnr_wm, ssim_wm))
+    print('Real PSNR: %f  SSIM: %f' % (psnr_real, ssim_real))
+    print('Fake PSNR: %f  SSIM: %f' % (psnr_fake, ssim_fake))
     webpage.save()  # save the HTML

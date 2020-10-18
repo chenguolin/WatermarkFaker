@@ -1,4 +1,5 @@
 import os
+import cv2
 import torch
 from skimage.metrics import *
 from . import networks
@@ -136,19 +137,45 @@ class BaseModel(ABC):
                 visual_ret[name] = getattr(self, name)
         return visual_ret
 
-    def cal_psnr_ssim(self):
+    def cal_psnr_ssim(self, crop=False):
         """Return PSNR and SSIM for paired images and watermark."""
         real_B_img = getattr(self, 'real_B_img')
         fake_B_img = getattr(self, 'fake_B_img')
         real_watermark = getattr(self, 'real_watermark')
         fake_watermark = getattr(self, 'fake_watermark')
+        if self.opt.watermark == 'dct':
+            if real_watermark.ndim == 3:
+                watermark = cv2.imread("./images/cross.png")[:,:,::-1]
+            else:
+                watermark = cv2.imread("./images/cross.png", flags=0)
+        elif self.opt.watermark == 'lsb':
+            if real_watermark.ndim == 3:
+                watermark = cv2.imread("./images/lena_lsb_2.png")[:,:,::-1]
+            else:
+                watermark = cv2.imread("./images/lena_lsb_2.png", flags=0)
+        else:
+            if real_watermark.ndim == 3:
+                watermark = cv2.imread("./images/lena_b_lsb.png")[:,:,::-1]
+            else:
+                watermark = cv2.imread("./images/lena_b_lsb.png", flags=0)
 
         psnr1 = peak_signal_noise_ratio(real_B_img, fake_B_img)
         ssim1 = structural_similarity(real_B_img, fake_B_img, multichannel=(real_B_img.ndim == 3))
         
+        if crop:
+            real_watermark = real_watermark[:32, :32]
+            fake_watermark = fake_watermark[:32, :32]
+
         psnr2 = peak_signal_noise_ratio(real_watermark, fake_watermark)
         ssim2 = structural_similarity(real_watermark, fake_watermark, multichannel=(real_watermark.ndim == 3))
-        return psnr1, ssim1, psnr2, ssim2
+
+        psnr3 = peak_signal_noise_ratio(real_watermark, watermark)
+        ssim3 = structural_similarity(real_watermark, watermark, multichannel=(real_watermark.ndim == 3))
+        
+        psnr4 = peak_signal_noise_ratio(fake_watermark, watermark)
+        ssim4 = structural_similarity(fake_watermark, watermark, multichannel=(fake_watermark.ndim == 3))
+        
+        return psnr1, ssim1, psnr2, ssim2, psnr3, ssim3, psnr4, ssim4
 
     def get_current_losses(self):
         """Return traning losses / errors. train.py will print out these errors on console, and save them to a file"""
