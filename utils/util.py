@@ -80,6 +80,21 @@ def bits2im(input_bits, imtype=np.uint8):
     return image_numpy.astype(imtype)
 
 
+def dct2im(input_dct, imtype=np.uint8):
+    dct_tensor = input_dct.detach()
+    dct_numpy = dct_tensor[0].cpu().float().numpy()
+    B = 8  # temporary value
+    h, w = dct_numpy.shape[1], dct_numpy.shape[2]
+    image_numpy = np.zeros(dct_numpy.shape)
+    for i in range(h // B):
+        for j in range(w // B):
+            sub_dct = dct_numpy[0, i*B : (i+1)*B, j*B : (j+1)*B]
+            image_numpy[0, i*B : (i+1)*B, j*B : (j+1)*B] = cv2.idct(sub_dct)
+    image_numpy = np.tile(image_numpy, (3, 1, 1))
+    image_numpy = np.transpose(image_numpy, (1, 2, 0))
+    return np.around(image_numpy).astype(imtype)
+
+
 def print_numpy(x, val=True, shp=False):
     """Print the mean, min, max, median, std and size of a numpy array
     

@@ -2,6 +2,7 @@
 This module implements an abstract base class (ABC) 'BaseDataset' for datasets.
 It also includes common transformation functions (e.g., get_transform, __scale_width), which can be later used in subclasses.
 """
+import cv2
 import torch
 import random
 import numpy as np
@@ -110,6 +111,10 @@ def get_transform(opt, params=None, grayscale=False, method=Image.BICUBIC, conve
     if opt.expand_bits:
         convert = False
         transform_list.append(transforms.Lambda(lambda img: __transform_to_bits(img)))
+    
+    if opt.dct_trans:
+        convert = False
+        transform_list.append(transforms.Lambda(lambda img: __dct(img)))
 
     if convert:
         transform_list += [transforms.ToTensor()]
@@ -179,3 +184,15 @@ def __transform_to_bits(img):
             bit_layers.append((img[:, :, c] >> b) & 1)  # ith bit layer
     bits_numpy = np.array(bit_layers).astype('float32') # (24, 256, 256)
     return torch.from_numpy(bits_numpy * 2 - 1)         # to tensor and normalize
+
+
+def __dct(image):
+    image = np.expand_dims(np.array(image), 0)
+    B = 8  # temporary value
+    h, w = image.shape[1], image.shape[2]
+    image_dct = np.zeros(image.shape)
+    for i in range(h // B):
+        for j in range(w // B):
+            sub_image = image[0, i*B : (i+1)*B, j*B : (j+1)*B].astype('float32')
+            image_dct[0, i*B : (i+1)*B, j*B : (j+1)*B] = cv2.dct(sub_image)
+    return torch.from_numpy(image_dct.astype('float32'))
