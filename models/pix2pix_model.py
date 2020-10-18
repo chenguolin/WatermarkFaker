@@ -2,7 +2,7 @@ import torch
 from . import networks
 from .base_model import BaseModel
 from watermarks import lsb, lsbm, lsbmr, rlsb, dct
-from utils.util import tensor2im, bits2im, im2tensor
+from utils.util import tensor2im, bits2im, im2tensor, dct2im
 
 class Pix2PixModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
@@ -55,7 +55,7 @@ class Pix2PixModel(BaseModel):
             opt.output_nc *= 8
         # define networks (both generator and discriminator)
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.netG, opt.norm,
-                                      not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
+                                      not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids, opt.dct_trans)
         # define a discriminator; conditional GANs need to take both input and output images; Therefore, #channels for D is input_nc + output_nc
         if self.isTrain:
             self.netD = networks.define_D(opt.input_nc + opt.output_nc, opt.ndf, opt.netD,
@@ -90,8 +90,10 @@ class Pix2PixModel(BaseModel):
         self.real_B = Input['B' if AtoB else 'A'].to(self.device)
         if self.opt.expand_bits:
             self.real_B_img = bits2im(self.real_B)
+        elif self.opt.dct_trans:
+            self.real_B_img = dct2im(self.real_B)
         else:
-            self.real_B_img = self.real_B.detach()
+            self.real_B_img = tensor2im(self.real_B.detach())
         
         if 'lsb' == self.opt.watermark:
             self.real_watermark = lsb.LSB().extract(tensor2im(self.real_B_img))
@@ -112,8 +114,10 @@ class Pix2PixModel(BaseModel):
         self.fake_B = self.netG(self.real_A)  # G(A)
         if self.opt.expand_bits:
             self.fake_B_img = bits2im(self.fake_B)
+        elif self.opt.dct_trans:
+            self.fake_B_img = dct2im(self.fake_B)
         else:
-            self.fake_B_img = self.fake_B.detach()
+            self.fake_B_img = tensor2im(self.fake_B.detach())
         
         if 'lsb' == self.opt.watermark:
             self.fake_watermark = lsb.LSB().extract(tensor2im(self.fake_B_img))
