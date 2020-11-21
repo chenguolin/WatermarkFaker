@@ -23,7 +23,7 @@ pip install -r requirements.txt
 ```
 python -m visdom.server
 ```
-Then open[http://localhost:8097/](http://localhost:8097/) by browser.
+Then open [http://localhost:8097/](http://localhost:8097/) by browser.
 
 ## 0x02 Train
 ```
